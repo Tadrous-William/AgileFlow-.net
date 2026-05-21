@@ -1,0 +1,143 @@
+@model List<AgileTaskManager.Models.ViewModels.TaskListViewModel>
+@using AgileTaskManager.Constants
+@{
+    ViewData["Title"] = "Tasks";
+}
+
+<div class="atm-page-header">
+    <div>
+        <h1 class="atm-page-title">Task Board</h1>
+        <p class="atm-page-sub">@Model.Count task(s) currently in the workspace</p>
+    </div>
+    @if (User.IsInRole(RoleConstants.Admin))
+    {
+        <a asp-action="Create" class="atm-btn primary">
+            <i class="bi bi-plus-lg"></i> New Task
+        </a>
+    }
+</div>
+
+<!-- Filters -->
+<div class="atm-filter-bar mb-3">
+    <input type="text" id="searchInput" class="atm-filter-input" placeholder="Search by task title..." />
+    <select id="statusFilter" class="atm-filter-select">
+        <option value="">All Statuses</option>
+        <option value="ToDo">To Do</option>
+        <option value="InProgress">In Progress</option>
+        <option value="Done">Done</option>
+    </select>
+    <select id="priorityFilter" class="atm-filter-select">
+        <option value="">All Priorities</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+    </select>
+</div>
+
+<div class="atm-card">
+    <div class="atm-card-body p-0">
+        @if (!Model.Any())
+        {
+            <div class="atm-empty">
+                <i class="bi bi-inbox atm-empty-icon"></i>
+                <p>No tasks found.</p>
+                @if (User.IsInRole(RoleConstants.Admin))
+                {
+                    <a asp-action="Create" class="atm-btn primary sm">Create your first task</a>
+                }
+            </div>
+        }
+        else
+        {
+            <table class="atm-table" id="taskTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Title</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Assigned To</th>
+                        <th>Deadline</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model)
+                    {
+                        <tr class="task-row" data-status="@t.Status" data-priority="@t.Priority">
+                            <td class="text-muted">#@t.Id</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@t.Id" class="atm-task-link">
+                                    @t.Title
+                                </a>
+                                @if (t.IsBlocked)
+                                {
+                                    <span class="atm-tag blocked ms-1" title="Has unfinished dependencies">
+                                        <i class="bi bi-lock-fill"></i> Blocked
+                                    </span>
+                                }
+                            </td>
+                            <td><span class="atm-priority @t.Priority.ToString().ToLower()">@t.Priority</span></td>
+                            <td><span class="atm-status @t.Status.ToString().ToLower()">@t.Status</span></td>
+                            <td>@(t.AssignedToName ?? "—")</td>
+                            <td class="@(t.IsOverdue ? "text-danger fw-semibold" : "")">
+                                @(t.Deadline?.ToString("dd MMM yyyy") ?? "—")
+                                @if (t.IsOverdue) { <i class="bi bi-exclamation-circle ms-1"></i> }
+                            </td>
+                            <td>
+                                <div class="atm-actions">
+                                    <a asp-action="Details" asp-route-id="@t.Id" class="atm-action-btn" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (User.IsInRole(RoleConstants.Admin))
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@t.Id" class="atm-action-btn" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form asp-action="Delete" method="post" class="d-inline"
+                                              onsubmit="return confirm('Delete this task?')">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@t.Id" />
+                                            <button type="submit" class="atm-action-btn danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script>
+// Client-side search + filter
+const searchInput  = document.getElementById('searchInput');
+const statusFilter = document.getElementById('statusFilter');
+const priorityFilter = document.getElementById('priorityFilter');
+const rows = document.querySelectorAll('.task-row');
+
+function applyFilters() {
+    const q  = searchInput.value.toLowerCase();
+    const s  = statusFilter.value;
+    const p  = priorityFilter.value;
+    rows.forEach(row => {
+        const title    = row.querySelector('.atm-task-link').textContent.toLowerCase();
+        const status   = row.dataset.status;
+        const priority = row.dataset.priority;
+        const visible  = title.includes(q)
+                      && (s === '' || status === s)
+                      && (p === '' || priority === p);
+        row.style.display = visible ? '' : 'none';
+    });
+}
+
+searchInput.addEventListener('input', applyFilters);
+statusFilter.addEventListener('change', applyFilters);
+priorityFilter.addEventListener('change', applyFilters);
+</script>
+}

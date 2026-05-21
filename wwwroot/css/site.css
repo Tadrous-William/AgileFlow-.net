@@ -1,0 +1,975 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-soft: #f9fafb;
+  --surface-muted: #f3f4f6;
+  --text: #111827;
+  --text-muted: #6b7280;
+  --text-soft: #4b5563;
+  --muted: #6b7280;
+  --muted2: #4b5563;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-soft: #dbeafe;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --sidebar-w: 250px;
+  --topbar-h: 72px;
+  --radius-sm: 10px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.08);
+  --shadow-md: 0 8px 24px rgba(17, 24, 39, 0.08);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-strong);
+}
+
+.atm-body {
+  display: flex;
+  min-height: 100vh;
+  background: var(--surface-soft);
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────── */
+.atm-sidebar {
+  width: var(--sidebar-w);
+  background: #f8fafc;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: transform 0.25s ease;
+  overflow-y: auto;
+}
+
+.atm-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.atm-brand-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; color: white;
+  flex-shrink: 0;
+}
+
+.atm-brand-text {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.atm-nav-list {
+  list-style: none;
+  padding: 12px 10px;
+  flex: 1;
+}
+
+.atm-nav-section {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  padding: 16px 10px 6px;
+}
+
+.atm-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+
+.atm-nav-link:hover {
+  background: #eff6ff;
+  color: var(--accent);
+}
+
+.atm-nav-link.active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.atm-nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+}
+
+.atm-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.atm-sidebar-footer {
+  padding: 14px 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.atm-user-info { flex: 1; min-width: 0; }
+
+.atm-user-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.8rem;
+  color: var(--accent-strong);
+  flex-shrink: 0;
+}
+
+.atm-user-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.atm-logout-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.atm-logout-btn:hover { color: var(--danger); background: #fee2e2; }
+
+/* ── Main Content ─────────────────────────────────────────────── */
+.atm-main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--surface-soft);
+}
+
+/* ── Top Bar ──────────────────────────────────────────────────── */
+.atm-topbar {
+  height: var(--topbar-h);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.atm-sidebar-toggle {
+  background: none;
+  border: none;
+  color: var(--muted2);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: none;
+}
+
+.atm-topbar-title {
+  font-weight: 700;
+  font-size: 1.25rem;
+  flex: 1;
+}
+
+.atm-topbar-actions { display: flex; align-items: center; gap: 12px; }
+.atm-topbar-title-wrap { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.atm-topbar-eyebrow { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+
+.atm-signalr-status {
+  font-size: 0.75rem;
+  color: var(--text-soft);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+.atm-status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.atm-signalr-status.connected { color: var(--success); border-color: rgba(22,163,74,0.3); }
+.atm-signalr-status.connected .atm-status-dot {
+  background: var(--success);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── Page Body ────────────────────────────────────────────────── */
+.atm-page-body { padding: 28px; flex: 1; }
+.atm-alert-stack { padding: 16px 24px 0; }
+
+.atm-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 12px;
+}
+
+.atm-page-title {
+  font-weight: 700;
+  font-size: 2rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.atm-page-sub { color: var(--text-muted); font-size: 0.95rem; margin: 6px 0 0; }
+
+/* ── Cards ────────────────────────────────────────────────────── */
+.atm-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.atm-card-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+}
+
+.atm-card-body { padding: 20px; }
+
+/* ── Stat Cards ───────────────────────────────────────────────── */
+.atm-stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.atm-stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+.atm-stat-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.atm-stat-card.blue  .atm-stat-icon { background: #dbeafe; color: var(--accent); }
+.atm-stat-card.green .atm-stat-icon { background: #dcfce7; color: var(--success); }
+.atm-stat-card.orange .atm-stat-icon{ background: #ffedd5; color: var(--warning); }
+.atm-stat-card.red   .atm-stat-icon { background: #fee2e2; color: var(--danger); }
+
+.atm-stat-value {
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--text);
+}
+
+.atm-stat-card.blue  .atm-stat-value { color: var(--accent); }
+.atm-stat-card.green .atm-stat-value { color: var(--success); }
+.atm-stat-card.orange .atm-stat-value { color: var(--warning); }
+.atm-stat-card.red   .atm-stat-value { color: var(--danger); }
+
+.atm-stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+
+.atm-stat-bar {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px;
+  width: var(--pct, 0%);
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width 1s ease;
+}
+
+.atm-stat-card.green  .atm-stat-bar { background: linear-gradient(90deg, var(--success), #15803d); }
+.atm-stat-card.orange .atm-stat-bar { background: linear-gradient(90deg, var(--warning), #b45309); }
+.atm-stat-card.red    .atm-stat-bar { background: linear-gradient(90deg, var(--danger), #b91c1c); }
+
+/* ── Table ────────────────────────────────────────────────────── */
+.atm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.atm-table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.atm-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text);
+}
+
+.atm-table tbody tr:last-child td { border-bottom: none; }
+.atm-table tbody tr:hover { background: rgba(79,128,255,0.04); }
+
+.atm-task-link {
+  color: var(--text);
+  font-weight: 500;
+  transition: color 0.15s;
+}
+.atm-task-link:hover { color: var(--accent); }
+
+/* ── Badges: Priority, Status, Role ──────────────────────────── */
+.atm-priority, .atm-status, .atm-role-tag, .atm-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Priority */
+.atm-priority.high   { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
+.atm-priority.medium { background: #ffedd5; color: var(--warning); border: 1px solid #fed7aa; }
+.atm-priority.low    { background: #dcfce7; color: var(--success); border: 1px solid #bbf7d0; }
+
+/* Status */
+.atm-status.todo       { background: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db; }
+.atm-status.inprogress { background: #dbeafe; color: var(--accent); border: 1px solid #bfdbfe; }
+.atm-status.done       { background: #dcfce7; color: var(--success); border: 1px solid #bbf7d0; }
+
+/* Role */
+.atm-role-tag.admin  { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
+.atm-role-tag.member { background: rgba(79,128,255,0.13); color: var(--accent); border: 1px solid rgba(79,128,255,0.2); }
+.atm-role-tag.client { background: #dcfce7; color: var(--success); border: 1px solid #bbf7d0; }
+
+/* Tag */
+.atm-tag.blocked { background: #ffedd5; color: var(--warning); border: 1px solid #fed7aa; font-size: 0.65rem; }
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+.atm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  border-radius: var(--radius);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.atm-btn.primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: none;
+}
+.atm-btn.primary:hover {
+  background: var(--accent-strong);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+  color: white;
+}
+
+.atm-btn.secondary {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--border2);
+}
+.atm-btn.secondary:hover { background: #f8fafc; color: var(--text); }
+
+.atm-btn.ghost {
+  background: transparent;
+  color: var(--text-soft);
+  border: 1px solid var(--border);
+}
+.atm-btn.ghost:hover { background: #f8fafc; color: var(--text); }
+
+.atm-btn.danger {
+  background: #fee2e2;
+  color: var(--danger);
+  border: 1px solid #fecaca;
+}
+.atm-btn.danger:hover { background: #fecaca; color: var(--danger); }
+
+.atm-btn.sm { padding: 6px 14px; font-size: 0.78rem; }
+.atm-btn.w-100 { width: 100%; justify-content: center; }
+
+/* ── Action Buttons (icon-only) ───────────────────────────────── */
+.atm-actions { display: flex; align-items: center; gap: 4px; }
+
+.atm-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  border-radius: 6px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted2);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+}
+.atm-action-btn:hover        { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+.atm-action-btn.danger:hover { background: #fee2e2; color: var(--danger); border-color: #fecaca; }
+.atm-action-btn.success:hover{ background: #dcfce7; color: var(--success); border-color: #bbf7d0; }
+
+/* ── Forms ────────────────────────────────────────────────────── */
+.atm-form-group { margin-bottom: 18px; }
+
+.atm-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+
+.atm-input, .atm-select, .atm-textarea {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  padding: 9px 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+
+.atm-input:focus, .atm-select:focus, .atm-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79,128,255,0.12);
+}
+
+.atm-input::placeholder, .atm-textarea::placeholder { color: var(--muted); }
+
+.atm-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.atm-select option { background: #fff; color: var(--text); }
+.atm-textarea { resize: vertical; min-height: 80px; }
+
+.atm-input.with-icon { padding-left: 38px; }
+.atm-input-icon-wrap { position: relative; }
+.atm-input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.atm-validation { color: var(--danger); font-size: 0.75rem; margin-top: 4px; display: block; }
+
+/* ── Filter Bar ───────────────────────────────────────────────── */
+.atm-filter-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.atm-filter-input {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  outline: none;
+  flex: 1;
+  min-width: 200px;
+  transition: border-color 0.15s;
+}
+.atm-filter-input:focus { border-color: var(--accent); }
+.atm-filter-input::placeholder { color: var(--muted); }
+
+.atm-filter-select {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  padding: 8px 32px 8px 12px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color 0.15s;
+}
+.atm-filter-select:focus { border-color: var(--accent); }
+.atm-filter-select option { background: #fff; }
+
+/* ── Activity List ────────────────────────────────────────────── */
+.atm-activity-list {
+  list-style: none;
+  padding: 0;
+}
+
+.atm-activity-item {
+  display: flex;
+  gap: 14px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.atm-activity-item:last-child { border-bottom: none; }
+
+.atm-activity-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.atm-activity-content { flex: 1; min-width: 0; }
+.atm-activity-action  { font-weight: 600; font-size: 0.82rem; color: var(--text); }
+
+.atm-activity-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.atm-activity-diff {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  margin-top: 4px;
+}
+.atm-activity-diff .old { color: var(--danger); text-decoration: line-through; }
+.atm-activity-diff .new { color: var(--success); }
+.atm-activity-diff i    { color: var(--text-muted); }
+
+/* ── Comments ─────────────────────────────────────────────────── */
+.atm-comment {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  animation: fadeSlideIn 0.3s ease;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.atm-comment-live { border-left: 2px solid var(--accent); padding-left: 8px; }
+
+.atm-comment-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.8rem; color: white;
+  flex-shrink: 0;
+}
+.atm-comment-avatar.lg { width: 72px; height: 72px; font-size: 2rem; }
+.atm-comment-avatar.sm { width: 32px; height: 32px; font-size: 0.75rem; }
+
+.atm-comment-body { flex: 1; }
+
+.atm-comment-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.atm-comment-author { font-weight: 600; font-size: 0.82rem; }
+.atm-comment-time   { font-size: 0.72rem; color: var(--text-muted); }
+
+.atm-comment-delete {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.atm-comment-delete:hover { color: var(--danger); }
+.atm-comment-text { font-size: 0.875rem; color: var(--text-soft); line-height: 1.6; }
+
+/* ── File List ────────────────────────────────────────────────── */
+.atm-file-list { list-style: none; padding: 0; }
+
+.atm-file-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+.atm-file-item:last-child { border-bottom: none; }
+.atm-file-item i { color: var(--accent); }
+.atm-file-item .atm-link { color: var(--text); font-weight: 500; }
+.atm-file-item .atm-link:hover { color: var(--accent); }
+
+/* ── Stars ────────────────────────────────────────────────────── */
+.atm-stars { display: flex; align-items: center; gap: 4px; }
+.atm-star  { font-size: 1.1rem; }
+.bi-star-fill { color: var(--orange); }
+.bi-star      { color: var(--text-muted); }
+
+.atm-star-picker { display: flex; gap: 8px; margin-bottom: 8px; }
+
+.atm-star-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.6rem;
+  cursor: pointer;
+  transition: color 0.15s, transform 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+.atm-star-btn:hover, .atm-star-btn.active { color: var(--warning); transform: scale(1.1); }
+
+/* ── Notifications List ───────────────────────────────────────── */
+.atm-notif-list { list-style: none; padding: 0; }
+
+.atm-notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.atm-notif-item:last-child { border-bottom: none; }
+.atm-notif-item:hover { background: rgba(79,128,255,0.04); }
+.atm-notif-item.unread { background: rgba(79,128,255,0.06); }
+.atm-notif-item.unread .atm-notif-message { color: var(--text); font-weight: 600; }
+
+.atm-notif-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+  font-size: 0.85rem;
+}
+
+.atm-notif-body { flex: 1; min-width: 0; }
+.atm-notif-message { font-size: 0.875rem; color: var(--muted2); display: block; }
+.atm-notif-message:hover { color: var(--accent); }
+.atm-notif-time { font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+
+/* ── Detail Labels ────────────────────────────────────────────── */
+.atm-detail-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.atm-description {
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+/* ── Auth Layout ──────────────────────────────────────────────── */
+.atm-auth-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: radial-gradient(circle at 0% 0%, #eff6ff, transparent 45%), #f8fafc;
+}
+
+.atm-auth-wrapper {
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+}
+
+.atm-auth-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.1);
+}
+
+.atm-auth-header { text-align: center; margin-bottom: 28px; }
+
+.atm-auth-logo {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; color: white;
+  margin: 0 auto 16px;
+}
+
+.atm-auth-title {
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.atm-auth-sub { color: var(--muted); font-size: 0.85rem; margin: 0; }
+.atm-forbidden-icon { font-size: 4rem; color: var(--danger); margin-bottom: 1rem; }
+.atm-forbidden-title { font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+
+/* Demo credentials box */
+.atm-demo-creds {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+}
+.atm-demo-title {
+  font-size: 0.68rem;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.atm-demo-row {
+  font-size: 0.75rem;
+  color: var(--text-soft);
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.atm-demo-row:last-child { margin-bottom: 0; }
+
+/* ── Modal ────────────────────────────────────────────────────── */
+.atm-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.atm-modal .modal-header {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.atm-modal .modal-body { background: var(--surface); }
+
+/* ── Toast ────────────────────────────────────────────────────── */
+.atm-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #fff;
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--accent-strong);
+  color: var(--text);
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.16);
+  z-index: 9999;
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 3.2s forwards;
+  max-width: 320px;
+}
+
+@keyframes toastIn  { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+@keyframes toastOut { from { opacity:1; } to { opacity:0; } }
+
+/* ── Alerts ───────────────────────────────────────────────────── */
+.atm-alert {
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  border: none;
+}
+.alert-success { background: #dcfce7; color: var(--success); }
+.alert-danger  { background: #fee2e2; color: var(--danger); }
+
+/* ── Misc ─────────────────────────────────────────────────────── */
+.atm-empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.atm-link    { color: var(--accent); }
+.atm-link:hover { color: #7ea8ff; }
+.atm-link-sm { font-size: 0.78rem; color: var(--accent); }
+.atm-link-sm:hover { color: #7ea8ff; }
+
+.atm-stat-mini-val {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--text);
+}
+.atm-stat-mini-lbl { font-size: 0.72rem; color: var(--text-muted); }
+.atm-profile-name { color: var(--text); font-weight: 700; margin-bottom: 0.5rem; }
+.atm-divider { border-color: var(--border); margin: 1.5rem 0; }
+.atm-status-pill { font-weight: 700; }
+.atm-status-pill.active { color: var(--success); }
+.atm-status-pill.inactive { color: var(--danger); }
+.atm-empty-icon { font-size: 2rem; opacity: 0.35; }
+.dashboard-chart-wrap { display: flex; align-items: center; justify-content: center; }
+.dashboard-chart-wrap-status { height: 300px; }
+.dashboard-chart-wrap-priority { height: 380px; }
+
+/* ── Scrollbar ────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f3f4f6; }
+::-webkit-scrollbar-thumb { background: rgba(79,128,255,0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(79,128,255,0.5); }
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .atm-sidebar {
+    transform: translateX(-100%);
+  }
+  .atm-sidebar.open {
+    transform: translateX(0);
+  }
+  .atm-main {
+    margin-left: 0;
+  }
+  .atm-sidebar-toggle {
+    display: flex;
+  }
+  .atm-page-body { padding: 16px; }
+  .atm-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .atm-stat-card { padding: 14px; }
+  .atm-stat-value { font-size: 1.5rem; }
+  .atm-auth-card { padding: 24px; }
+}
+
+@media (max-width: 991px) {
+  .atm-page-title { font-size: 1.7rem; }
+  .dashboard-chart-wrap-priority { height: 320px; }
+}

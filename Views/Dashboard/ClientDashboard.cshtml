@@ -1,0 +1,868 @@
+@model AgileTaskManager.Models.ViewModels.ClientDashboardViewModel
+@using AgileTaskManager.Constants
+@{
+    ViewData["Title"] = "Client Dashboard";
+}
+
+<style>
+/* ── Modern Dashboard Styles ──────────────────────────────────────── */
+.dash-hero {
+    background: linear-gradient(135deg, #0d9488 0%, #059669 50%, #047857 100%);
+    border-radius: 18px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    box-shadow: 0 8px 32px rgba(13, 148, 136, 0.28);
+}
+.dash-hero h1 {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+}
+.dash-hero p {
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0.3rem 0 0;
+    font-size: 0.93rem;
+}
+.dash-hero-eyebrow {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+}
+.kpi-card {
+    border-radius: 16px;
+    padding: 1.4rem 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+}
+.kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.16);
+}
+.kpi-card::after {
+    content: '';
+    position: absolute;
+    right: -18px;
+    bottom: -18px;
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+}
+.kpi-card.teal {
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+}
+.kpi-card.emerald {
+    background: linear-gradient(135deg, #059669, #047857);
+}
+.kpi-card.cyan {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+}
+.kpi-card.amber {
+    background: linear-gradient(135deg, #d97706, #b45309);
+}
+.kpi-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+.kpi-body {
+    flex: 1;
+}
+.kpi-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+}
+.kpi-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.78);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.25rem;
+}
+.panel {
+    background: #fff;
+    border: 1px solid #e8edf5;
+    border-radius: 16px;
+    box-shadow: 0 2px 14px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+}
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.3rem;
+    border-bottom: 1px solid #f0f4fb;
+    background: #fafbff;
+}
+.panel-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+.panel-title i {
+    color: #0d9488;
+}
+.padded {
+    padding: 1.2rem 1.3rem;
+}
+.stat-tile {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid #e8edf5;
+}
+.stat-tile-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.stat-tile-label {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-top: 0.25rem;
+}
+.mini-progress {
+    background: #e2e8f0;
+    border-radius: 99px;
+    height: 5px;
+    margin-top: 6px;
+}
+.mini-progress-fill {
+    height: 5px;
+    border-radius: 99px;
+}
+.fill-teal {
+    background: linear-gradient(90deg, #0d9488, #14b8a6);
+}
+.fill-emerald {
+    background: linear-gradient(90deg, #059669, #10b981);
+}
+.fill-cyan {
+    background: linear-gradient(90deg, #0284c7, #06b6d4);
+}
+.fill-amber {
+    background: linear-gradient(90deg, #d97706, #f59e0b);
+}
+.badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 99px;
+    font-size: 0.71rem;
+    font-weight: 600;
+}
+.badge-pill.success {
+    background: rgba(5, 150, 105, 0.1);
+    color: #059669;
+    border: 1px solid rgba(5, 150, 105, 0.25);
+}
+.badge-pill.warning {
+    background: rgba(217, 119, 6, 0.1);
+    color: #d97706;
+    border: 1px solid rgba(217, 119, 6, 0.25);
+}
+.badge-pill.critical {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.25);
+}
+.dash-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.dash-table thead tr {
+    background: #f8fafc;
+}
+.dash-table thead th {
+    padding: 0.6rem 1rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #94a3b8;
+    border-bottom: 1px solid #e8edf5;
+    white-space: nowrap;
+}
+.dash-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s;
+}
+.dash-table tbody tr:last-child {
+    border-bottom: none;
+}
+.dash-table tbody tr:hover {
+    background: #f8faff;
+}
+.dash-table tbody td {
+    padding: 0.7rem 1rem;
+    font-size: 0.855rem;
+    color: #334155;
+    vertical-align: middle;
+}
+.project-card {
+    background: #fff;
+    border: 1px solid #e8edf5;
+    border-radius: 12px;
+    padding: 1.2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s;
+}
+.project-card:hover {
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
+}
+.project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+.project-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+.project-status {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.25rem 0.6rem;
+    border-radius: 99px;
+}
+.project-status.on-track {
+    background: rgba(5, 150, 105, 0.1);
+    color: #059669;
+}
+.project-status.at-risk {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+.activity-item {
+    display: flex;
+    gap: 0.85rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+.activity-item:last-child {
+    border-bottom: none;
+}
+.activity-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #0d9488;
+    flex-shrink: 0;
+    margin-top: 5px;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+.activity-action {
+    font-size: 0.855rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+.activity-meta {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.15rem;
+}
+.dash-empty {
+    padding: 2rem;
+    text-align: center;
+    color: #cbd5e1;
+    font-size: 0.875rem;
+}
+.dash-empty i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.75rem;
+}
+</style>
+
+<!-- ── Hero ─────────────────────────────────────────────────────── -->
+<div class="dash-hero">
+    <div>
+        <div class="dash-hero-eyebrow"><i class="bi bi-briefcase me-1"></i>Client Portal &nbsp;·&nbsp; @DateTime.Now.ToString("dddd, MMMM dd yyyy")</div>
+        <h1><i class="bi bi-person me-2" style="opacity: 0.85;"></i>@Model.ClientName</h1>
+        <p>Your project progress, deliverables, and performance metrics.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="atm-btn secondary" onclick="location.reload()" style="border-color: rgba(255, 255, 255, 0.4); color: #fff; background: rgba(255, 255, 255, 0.12);">
+            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+        </button>
+    </div>
+</div>
+
+<!-- ── KPI Row ──────────────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="kpi-card teal">
+            <div class="kpi-icon"><i class="bi bi-folder-fill"></i></div>
+            <div class="kpi-body">
+                <div class="kpi-value">@Model.TotalProjects</div>
+                <div class="kpi-label">Total Projects</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card emerald">
+            <div class="kpi-icon"><i class="bi bi-play-circle"></i></div>
+            <div class="kpi-body">
+                <div class="kpi-value">@Model.ActiveProjects</div>
+                <div class="kpi-label">Active Projects</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card cyan">
+            <div class="kpi-icon"><i class="bi bi-check-circle"></i></div>
+            <div class="kpi-body">
+                <div class="kpi-value">@Model.CompletedTasks</div>
+                <div class="kpi-label">Completed Tasks</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card amber">
+            <div class="kpi-icon"><i class="bi bi-star-fill"></i></div>
+            <div class="kpi-body">
+                <div class="kpi-value">@Model.AverageRating.ToString("F1")</div>
+                <div class="kpi-label">Avg Rating</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Overall Progress + Feedback Summary ──────────────────────────── -->
+<div class="row g-3 mb-4">
+    <div class="col-md-8">
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title"><i class="bi bi-bar-chart-steps"></i>Overall Progress</span>
+            </div>
+            <div class="padded">
+                <div class="row g-3">
+                    <div class="col-3">
+                        <div class="stat-tile">
+                            <div class="stat-tile-value" style="color: #0d9488;">@Model.OnTimeDeliveries</div>
+                            <div class="stat-tile-label">On-time</div>
+                            <div class="mini-progress"><div class="mini-progress-fill fill-teal" style="width: @(Model.OnTimeDeliveries > 0 ? (Model.OnTimeDeliveries * 100 / (Model.OnTimeDeliveries + Model.DelayedDeliverables)) : 0)%"></div></div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-tile">
+                            <div class="stat-tile-value" style="color: #dc2626;">@Model.DelayedDeliverables</div>
+                            <div class="stat-tile-label">Delayed</div>
+                            <div class="mini-progress"><div class="mini-progress-fill fill-amber" style="width: @(Model.DelayedDeliverables > 0 ? (Model.DelayedDeliverables * 100 / (Model.OnTimeDeliveries + Model.DelayedDeliverables)) : 0)%"></div></div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-tile">
+                            <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em;">Avg Completion</div>
+                            <div style="font-size: 1.4rem; font-weight: 800; color: #0d9488; margin-top: 0.25rem;">@Model.AverageCompletionTime.ToString("F1") <span style="font-size: 0.8rem; font-weight: 500; color: #94a3b8;">days</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid #e8edf5;">
+                    <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem;">Overall Completion</div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="flex: 1;">
+                            <div class="mini-progress" style="height: 8px;"><div class="mini-progress-fill fill-teal" style="width: @Model.OverallProgress%"></div></div>
+                        </div>
+                        <div style="font-size: 1.4rem; font-weight: 800; color: #0d9488; min-width: 60px; text-align: right;">@Model.OverallProgress.ToString("F1")%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel h-100">
+            <div class="panel-header">
+                <span class="panel-title"><i class="bi bi-star"></i>Feedback Summary</span>
+            </div>
+            <div class="padded">
+                <div style="text-align: center;">
+                    <div style="font-size: 2.2rem; font-weight: 800; color: #0d9488;">@Model.AverageRating.ToString("F1")</div>
+                    <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin: 0.5rem 0;">Average Rating</div>
+                    <div style="display: flex; justify-content: center; gap: 0.3rem; margin: 0.75rem 0;">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= Math.Round(Model.AverageRating))
+                            {
+                                <i class="bi bi-star-fill" style="color: #fbbf24; font-size: 1.1rem;"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-star" style="color: #cbd5e1; font-size: 1.1rem;"></i>
+                            }
+                        }
+                    </div>
+                    <div style="font-size: 0.855rem; color: #64748b; margin-top: 1rem;">@Model.TotalFeedbackGiven <span style="color: #94a3b8;">reviews given</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Projects Overview ────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+    @foreach (var project in Model.Projects.Take(3))
+    {
+        <div class="col-md-4">
+            <div class="project-card">
+                <div class="project-header">
+                    <h6 class="project-title">@project.ProjectName</h6>
+                    <span class="project-status @(project.IsOnTrack ? "on-track" : "at-risk")">
+                        @(project.IsOnTrack ? "On Track" : "At Risk")
+                    </span>
+                </div>
+                <div style="font-size: 0.855rem; color: #64748b; margin-bottom: 1rem;">@project.Description</div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em;">Progress</span>
+                        <span style="font-size: 0.85rem; font-weight: 700; color: #0d9488;">@project.ProgressPercentage.ToString("F0")%</span>
+                    </div>
+                    <div class="mini-progress"><div class="mini-progress-fill fill-teal" style="width: @project.ProgressPercentage%"></div></div>
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">@project.CompletedTasks/@project.TotalTasks tasks</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid #e8edf5; font-size: 0.75rem; color: #94a3b8;">
+                    <span><i class="bi bi-person me-1"></i>@project.ProjectManager</span>
+                    @if (project.EndDate.HasValue)
+                    {
+                        <span><i class="bi bi-calendar me-1"></i>@project.EndDate.Value.ToString("MMM dd")</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- ── Tasks & Activity ─────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title"><i class="bi bi-exclamation-circle"></i>Tasks Requiring Feedback</span>
+            </div>
+            <div class="padded">
+                @if (Model.TasksRequiringFeedback.Any())
+                {
+                    <div>
+                        @foreach (var task in Model.TasksRequiringFeedback.Take(5))
+                        {
+                            <div class="activity-item">
+                                <div class="activity-dot"></div>
+                                <div style="flex: 1;">
+                                    <div class="activity-action">
+                                        <a asp-controller="Task" asp-action="Details" asp-route-id="@task.Id" style="color: #1e293b; text-decoration: none;">
+                                            @task.Title
+                                        </a>
+                                    </div>
+                                    <div class="activity-meta" style="display: flex; gap: 0.5rem;">
+                                        <span class="badge-pill @(task.Priority.ToString().ToLower() == "critical" ? "critical" : task.Priority.ToString().ToLower() == "high" ? "warning" : "success")">
+                                            @task.Priority
+                                        </span>
+                                        @if (task.Deadline.HasValue)
+                                        {
+                                            <span><i class="bi bi-calendar me-1"></i>@task.Deadline.Value.ToString("MMM dd")</span>
+                                        }
+                                    </div>
+                                </div>
+                                <a asp-controller="Feedback" asp-action="Add" asp-route-taskId="@task.Id" style="font-size: 0.8rem; color: #0d9488; text-decoration: none; white-space: nowrap;">
+                                    <i class="bi bi-star"></i> Add
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="dash-empty">
+                        <i class="bi bi-check-circle"></i>
+                        <p>No tasks requiring feedback</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title"><i class="bi bi-check-circle"></i>Recently Completed</span>
+            </div>
+            <div class="padded">
+                @if (Model.RecentlyCompletedTasks.Any())
+                {
+                    <div>
+                        @foreach (var task in Model.RecentlyCompletedTasks.Take(5))
+                        {
+                            <div class="activity-item">
+                                <div class="activity-dot" style="background: #10b981;"></div>
+                                <div style="flex: 1;">
+                                    <div class="activity-action">
+                                        <a asp-controller="Task" asp-action="Details" asp-route-id="@task.Id" style="color: #1e293b; text-decoration: none;">
+                                            @task.Title
+                                        </a>
+                                    </div>
+                                    <div class="activity-meta">
+                                        <span class="badge-pill success">Completed</span>
+                                        @if (task.Deadline.HasValue && task.Deadline < DateTime.UtcNow)
+                                        {
+                                            <span style="color: #dc2626;"><i class="bi bi-exclamation-circle me-1"></i>Late</span>
+                                        }
+                                        else if (task.Deadline.HasValue)
+                                        {
+                                            <span style="color: #059669;"><i class="bi bi-check-circle me-1"></i>On time</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="dash-empty">
+                        <i class="bi bi-hourglass"></i>
+                        <p>No recently completed tasks</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Upcoming Milestones ──────────────────────────────────────── -->
+<div class="panel mb-4">
+    <div class="panel-header">
+        <span class="panel-title"><i class="bi bi-flag"></i>Upcoming Milestones</span>
+    </div>
+    <div class="padded">
+        @if (Model.UpcomingMilestones.Any())
+        {
+            <div class="row g-3">
+                @foreach (var milestone in Model.UpcomingMilestones.Take(4))
+                {
+                    <div class="col-md-3">
+                        <div style="border: 1px solid #e8edf5; border-radius: 12px; padding: 1rem; @(milestone.IsCritical ? "border-left: 3px solid #dc2626;" : "border-left: 3px solid #0d9488;")">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                                <h6 style="margin: 0; font-size: 0.9rem; font-weight: 700; color: #1e293b; flex: 1;">@milestone.Title</h6>
+                                @if (milestone.IsCritical)
+                                {
+                                    <span class="badge-pill critical" style="flex-shrink: 0; margin-left: 0.5rem;">Critical</span>
+                                }
+                            </div>
+                            <div style="margin-bottom: 0.75rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                                    <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em;">Progress</span>
+                                    <span style="font-size: 0.8rem; font-weight: 700; color: #0d9488;">@(milestone.AssociatedTasks > 0 ? (double)milestone.CompletedTasks / milestone.AssociatedTasks * 100 : 0).ToString("F0")%</span>
+                                </div>
+                                <div class="mini-progress"><div class="mini-progress-fill fill-teal" style="width: @(milestone.AssociatedTasks > 0 ? (double)milestone.CompletedTasks / milestone.AssociatedTasks * 100 : 0)%"></div></div>
+                                <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.25rem;">@milestone.CompletedTasks/@milestone.AssociatedTasks tasks</div>
+                            </div>
+                            <div style="padding-top: 0.75rem; border-top: 1px solid #e8edf5; font-size: 0.75rem; color: #94a3b8; display: flex; align-items: center; gap: 0.25rem;">
+                                <i class="bi bi-calendar"></i> @milestone.DueDate.ToString("MMM dd")
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="dash-empty">
+                <i class="bi bi-flag"></i>
+                <p>No upcoming milestones</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ── Financial Overview ───────────────────────────────────────── -->
+@if (Model.ProjectFinancials.Any())
+{
+    <div class="panel mb-4">
+        <div class="panel-header">
+            <span class="panel-title"><i class="bi bi-cash-coin"></i>Financial Overview</span>
+        </div>
+        <div class="padded">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="stat-tile">
+                        <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem;">Total Budget</div>
+                        <div class="stat-tile-value" style="color: #0d9488;">@Model.TotalProjectValue.ToString("C0")</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-tile">
+                        <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem;">Invoiced</div>
+                        <div class="stat-tile-value" style="color: #0284c7;">@Model.InvoicedAmount.ToString("C0")</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-tile">
+                        <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem;">Paid</div>
+                        <div class="stat-tile-value" style="color: #059669;">@Model.InvoicedAmount.ToString("C0")</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-tile">
+                        <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem;">Pending</div>
+                        <div class="stat-tile-value" style="color: #d97706;">@Model.PendingAmount.ToString("C0")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ── Deliverables ─────────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title"><i class="bi bi-file-earmark"></i>Recent Deliverables</span>
+            </div>
+            <div class="padded">
+                @if (Model.RecentDeliverables.Any())
+                {
+                    <div>
+                        @foreach (var deliverable in Model.RecentDeliverables.Take(5))
+                        {
+                            <div class="activity-item">
+                                <div class="activity-dot" style="background: #0284c7;"></div>
+                                <div style="flex: 1;">
+                                    <div class="activity-action">@deliverable.Title</div>
+                                    <div class="activity-meta" style="display: flex; gap: 0.75rem;">
+                                        <span class="badge-pill success">@deliverable.Status</span>
+                                        <span>@deliverable.Type</span>
+                                        @if (deliverable.DeliveredDate.HasValue)
+                                        {
+                                            <span><i class="bi bi-calendar me-1"></i>@deliverable.DeliveredDate.Value.ToString("MMM dd")</span>
+                                        }
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(deliverable.DownloadUrl))
+                                {
+                                    <a href="@deliverable.DownloadUrl" target="_blank" style="font-size: 0.8rem; color: #0d9488; text-decoration: none;">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="dash-empty">
+                        <i class="bi bi-file-earmark"></i>
+                        <p>No recent deliverables</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title"><i class="bi bi-hourglass-split"></i>Pending Deliverables</span>
+            </div>
+            <div class="padded">
+                @if (Model.PendingDeliverables.Any())
+                {
+                    <div>
+                        @foreach (var deliverable in Model.PendingDeliverables.Take(5))
+                        {
+                            <div class="activity-item">
+                                <div class="activity-dot" style="background: #d97706;"></div>
+                                <div style="flex: 1;">
+                                    <div class="activity-action">@deliverable.Title</div>
+                                    <div class="activity-meta" style="display: flex; gap: 0.75rem;">
+                                        <span class="badge-pill warning">Pending</span>
+                                        <span>@deliverable.Type</span>
+                                        <span><i class="bi bi-calendar me-1"></i>Due @deliverable.DueDate.ToString("MMM dd")</span>
+                                    </div>
+                                    @if (deliverable.RequiresApproval && !deliverable.IsApproved)
+                                    {
+                                        <div style="font-size: 0.75rem; color: #d97706; margin-top: 0.25rem;">
+                                            <i class="bi bi-exclamation-circle me-1"></i>Awaiting approval
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="dash-empty">
+                        <i class="bi bi-check-circle"></i>
+                        <p>No pending deliverables</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Feedback & Communication ─────────────────────────────────── -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title"><i class="bi bi-star"></i>Recent Feedback</span>
+            </div>
+            <div class="padded">
+                @if (Model.RecentFeedback.Any())
+                {
+                    <div>
+                        @foreach (var feedback in Model.RecentFeedback.Take(5))
+                        {
+                            <div style="padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid #f1f5f9;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                    <div style="flex: 1;">
+                                        <div class="activity-action">
+                                            <a asp-controller="Task" asp-action="Details" asp-route-id="@feedback.TaskId" style="color: #1e293b; text-decoration: none;">
+                                                @feedback.TaskTitle
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 0.2rem;">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= feedback.Rating)
+                                            {
+                                                <i class="bi bi-star-fill" style="color: #fbbf24; font-size: 0.9rem;"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-star" style="color: #cbd5e1; font-size: 0.9rem;"></i>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.855rem; color: #64748b; margin-bottom: 0.35rem;">@feedback.Comment</div>
+                                <div class="activity-meta">@feedback.CreatedAt.ToString("MMM dd, HH:mm")</div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="dash-empty">
+                        <i class="bi bi-star"></i>
+                        <p>No feedback given yet</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title"><i class="bi bi-chat-left"></i>Recent Comments</span>
+            </div>
+            <div class="padded">
+                @if (Model.RecentComments.Any())
+                {
+                    <div>
+                        @foreach (var comment in Model.RecentComments.Take(5))
+                        {
+                            <div style="padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid #f1f5f9;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                    <div style="flex: 1;">
+                                        <div class="activity-action">
+                                            <a asp-controller="Task" asp-action="Details" asp-route-id="@comment.TaskId" style="color: #1e293b; text-decoration: none;">
+                                                @comment.TaskTitle
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <span style="font-size: 0.75rem; color: #94a3b8; flex-shrink: 0; margin-left: 0.5rem;">@comment.AuthorName</span>
+                                </div>
+                                <div style="font-size: 0.855rem; color: #64748b; margin-bottom: 0.35rem;">@comment.Content</div>
+                                <div class="activity-meta">@comment.CreatedAt.ToString("MMM dd, HH:mm")</div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="dash-empty">
+                        <i class="bi bi-chat-left"></i>
+                        <p>No recent comments</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Upcoming Meetings ────────────────────────────────────────── -->
+<div class="panel mb-4">
+    <div class="panel-header">
+        <span class="panel-title"><i class="bi bi-calendar-event"></i>Upcoming Meetings</span>
+    </div>
+    <div class="padded">
+        @if (Model.UpcomingMeetings.Any())
+        {
+            <div>
+                @foreach (var meeting in Model.UpcomingMeetings.Take(5))
+                {
+                    <div class="activity-item">
+                        <div class="activity-dot" style="background: #7c3aed;"></div>
+                        <div style="flex: 1;">
+                            <div class="activity-action">@meeting.Title</div>
+                            <div class="activity-meta" style="display: flex; gap: 0.75rem;">
+                                <span><i class="bi bi-clock me-1"></i>@meeting.ScheduledAt.ToString("HH:mm")</span>
+                                <span><i class="bi bi-people me-1"></i>@meeting.ParticipantCount participants</span>
+                                @if (!string.IsNullOrEmpty(meeting.Duration))
+                                {
+                                    <span><i class="bi bi-hourglass-split me-1"></i>@meeting.Duration</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="dash-empty">
+                <i class="bi bi-calendar-x"></i>
+                <p>No upcoming meetings</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ── Last Updated ─────────────────────────────────────────────── -->
+<div style="text-align: center; padding: 2rem 0; color: #94a3b8; font-size: 0.75rem;">
+    <i class="bi bi-info-circle me-1"></i>Last updated: @Model.LastDataUpdate.ToString("yyyy-MM-dd HH:mm:ss")
+</div>

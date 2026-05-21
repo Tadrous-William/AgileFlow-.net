@@ -1,0 +1,398 @@
+﻿@model AgileTaskManager.Models.ViewModels.TeamLeadDashboardViewModel
+@using AgileTaskManager.Constants
+@{
+    ViewData["Title"] = "Team Lead Dashboard";
+}
+
+<div class="atm-page-header">
+    <div>
+        <h1 class="atm-page-title">Team Management</h1>
+        <p class="atm-page-sub">@Model.TeamName - @Model.TeamSize members</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="atm-btn secondary" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+        <a asp-controller="Project" asp-action="Create" class="atm-btn primary">
+            <i class="bi bi-plus-lg"></i> New Project
+        </a>
+    </div>
+</div>
+
+<!-- Team Overview -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="atm-card">
+            <div class="atm-card-body">
+                <div class="d-flex align-items-center">
+                    <div class="atm-stat-icon bg-primary">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="atm-stat-number">@Model.TeamSize</div>
+                        <div class="atm-stat-label">Team Members</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="atm-card">
+            <div class="atm-card-body">
+                <div class="d-flex align-items-center">
+                    <div class="atm-stat-icon bg-success">
+                        <i class="bi bi-person-check"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="atm-stat-number">@Model.ActiveMembersToday</div>
+                        <div class="atm-stat-label">Active Today</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="atm-card">
+            <div class="atm-card-body">
+                <div class="d-flex align-items-center">
+                    <div class="atm-stat-icon bg-info">
+                        <i class="bi bi-folder-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="atm-stat-number">@Model.ActiveProjects</div>
+                        <div class="atm-stat-label">Active Projects</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="atm-card">
+            <div class="atm-card-body">
+                <div class="d-flex align-items-center">
+                    <div class="atm-stat-icon bg-warning">
+                        <i class="bi bi-lightning-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <div class="atm-stat-number">@Model.TeamVelocity.ToString("F1")</div>
+                        <div class="atm-stat-label">Team Velocity</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Members and Projects -->
+<div class="row g-3 mb-4">
+    <div class="col-md-8">
+        <div class="atm-card">
+            <div class="atm-card-header">
+                <h5 class="atm-card-title">Team Members</h5>
+            </div>
+            <div class="atm-card-body">
+                <div class="atm-table-responsive">
+                    <table class="atm-table">
+                        <thead>
+                            <tr>
+                                <th>Developer</th>
+                                <th>Role</th>
+                                <th>Tasks</th>
+                                <th>Completed</th>
+                                <th>Streak</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var member in Model.TeamMembers)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="atm-avatar-small">@member.UserName.Substring(0, 1).ToUpper()</div>
+                                            <span class="ms-2">@member.UserName</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="atm-role-tag">@member.Role</span></td>
+                                    <td>@member.TasksAssigned</td>
+                                    <td>@member.TasksCompleted</td>
+                                    <td>
+                                        <span class="atm-streak-badge @(member.CurrentStreak > 0 ? "active" : "")">
+                                            🔥 @member.CurrentStreak
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (member.IsActiveToday)
+                                        {
+                                            <span class="atm-status-dot active"></span>
+                                        }
+                                        else
+                                        {
+                                            <span class="atm-status-dot inactive"></span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="atm-card">
+            <div class="atm-card-header">
+                <h5 class="atm-card-title">Project Overview</h5>
+            </div>
+            <div class="atm-card-body">
+                <div class="atm-project-list">
+                    @foreach (var project in Model.Projects)
+                    {
+                        <div class="atm-project-card">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="atm-project-title">@project.ProjectName</h6>
+                                <span class="atm-project-members">@project.ActiveMembers members</span>
+                            </div>
+                            <div class="atm-progress-bar mb-2">
+                                <div class="atm-progress-fill" style="width: @project.ProgressPercentage%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span>@project.CompletedTasks/@project.TotalTasks tasks</span>
+                                <span>@project.ProgressPercentage.ToString("F0")% complete</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Statistics and Performance -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="atm-card">
+            <div class="atm-card-header">
+                <h5 class="atm-card-title">Task Statistics</h5>
+            </div>
+            <div class="atm-card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="atm-stat-card completed">
+                            <div class="atm-stat-number">@Model.CompletedTasks</div>
+                            <div class="atm-stat-label">Completed</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="atm-stat-card in-progress">
+                            <div class="atm-stat-number">@Model.InProgressTasks</div>
+                            <div class="atm-stat-label">In Progress</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="atm-stat-card overdue">
+                            <div class="atm-stat-number">@Model.OverdueTasks</div>
+                            <div class="atm-stat-label">Overdue</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="atm-stat-card pending">
+                            <div class="atm-stat-number">@(Model.TotalTasks - Model.CompletedTasks - Model.InProgressTasks)</div>
+                            <div class="atm-stat-label">Pending</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <canvas id="tasksByStatusChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="atm-card">
+            <div class="atm-card-header">
+                <h5 class="atm-card-title">Team Performance</h5>
+            </div>
+            <div class="atm-card-body">
+                <div class="atm-performance-list">
+                    @foreach (var performer in Model.TeamPerformance.Take(5))
+                    {
+                        <div class="atm-performance-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="atm-performance-name">@performer.UserName</div>
+                                    <div class="atm-performance-stats">
+                                        @performer.TasksCompleted tasks • @performer.TotalXP XP
+                                    </div>
+                                </div>
+                                <div class="atm-performance-score">
+                                    <span class="atm-score-value">@performer.TotalXP</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sprint Information -->
+@if (Model.ActiveSprints.Any())
+{
+    <div class="atm-card mb-4">
+        <div class="atm-card-header">
+            <h5 class="atm-card-title">Active Sprints</h5>
+        </div>
+        <div class="atm-card-body">
+            <div class="row g-3">
+                @foreach (var sprint in Model.ActiveSprints)
+                {
+                    <div class="col-md-4">
+                        <div class="atm-sprint-card">
+                            <div class="atm-sprint-header">
+                                <h6 class="atm-sprint-name">@sprint.SprintName</h6>
+                                <span class="atm-sprint-status">@sprint.Status</span>
+                            </div>
+                            <div class="atm-sprint-progress">
+                                <div class="atm-progress-bar">
+                                    <div class="atm-progress-fill" style="width: @sprint.CompletionPercentage%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between text-muted small mt-1">
+                                    <span>@sprint.CompletedTasks/@sprint.TotalTasks tasks</span>
+                                    <span>@Math.Max(0, (sprint.EndDate - DateTime.UtcNow).Days) days left</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Blocked Tasks and Upcoming Meetings -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="atm-card">
+            <div class="atm-card-header">
+                <h5 class="atm-card-title">Blocked Tasks</h5>
+            </div>
+            <div class="atm-card-body">
+                @if (Model.BlockedTasks.Any())
+                {
+                    <div class="atm-task-list">
+                        @foreach (var task in Model.BlockedTasks.Take(5))
+                        {
+                            <div class="atm-task-item blocked">
+                                <div class="atm-task-title">@task.Title</div>
+                                <div class="atm-task-meta">
+                                    <span class="atm-task-priority @task.Priority.ToString().ToLower()">@task.Priority</span>
+                                    <span class="atm-task-deadline">
+                                        @if (task.Deadline.HasValue)
+                                        {
+                                            @task.Deadline.Value.ToString("MMM dd")
+                                        }
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="atm-empty">
+                        <i class="bi bi-check-circle text-success"></i>
+                        <p>No blocked tasks</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="atm-card">
+            <div class="atm-card-header">
+                <h5 class="atm-card-title">Upcoming Meetings</h5>
+            </div>
+            <div class="atm-card-body">
+                @if (Model.UpcomingMeetings.Any())
+                {
+                    <div class="atm-meeting-list">
+                        @foreach (var meeting in Model.UpcomingMeetings.Take(3))
+                        {
+                            <div class="atm-meeting-item">
+                                <div class="atm-meeting-time">@meeting.ScheduledAt.ToString("HH:mm")</div>
+                                <div class="atm-meeting-details">
+                                    <div class="atm-meeting-title">@meeting.Title</div>
+                                    <div class="atm-meeting-meta">@meeting.Duration • @meeting.ParticipantCount participants</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="atm-empty">
+                        <i class="bi bi-calendar-x text-muted"></i>
+                        <p>No upcoming meetings</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="atm-card">
+    <div class="atm-card-header">
+        <h5 class="atm-card-title">Recent Activity</h5>
+    </div>
+    <div class="atm-card-body">
+        <div class="atm-activity-list">
+            @foreach (var activity in Model.RecentActivity.Take(10))
+            {
+                <div class="atm-activity-item">
+                    <div class="atm-activity-icon">
+                        <i class="bi bi-activity"></i>
+                    </div>
+                    <div class="atm-activity-content">
+                        <div class="atm-activity-title">@activity.Action</div>
+                        <div class="atm-activity-description">@activity.Description</div>
+                        <div class="atm-activity-time">@activity.Timestamp.ToString("MMM dd, HH:mm")</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Last Updated -->
+<div class="text-muted text-center mt-3">
+    <small>Last updated: @Model.LastDataUpdate.ToString("yyyy-MM-dd HH:mm:ss")</small>
+</div>
+
+@section Scripts {
+    <script>
+        // Tasks by Status Chart
+        const tasksByStatusCtx = document.getElementById('tasksByStatusChart').getContext('2d');
+        new Chart(tasksByStatusCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.TasksByStatus.Keys)),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(Model.TasksByStatus.Values)),
+                    backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    </script>
+}

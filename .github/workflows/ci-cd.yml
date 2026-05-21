@@ -1,0 +1,56 @@
+name: CI/CD Pipeline
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ ci, cd ]
+  pull_request:
+    branches: [ main ]
+    tags: [ ci ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build solution
+      run: dotnet build --no-restore --configuration Release
+      
+    - name: Run tests
+      run: dotnet test --no-build --configuration Release --logger "console;verbosity=detailed"
+      
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: TestResults/
+        
+    - name: Generate coverage report
+      run: dotnet test --collect:"XPlat Code Coverage" --no-build --configuration Release
+      
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: TestResults/Coverage/
+
+  deploy-staging:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Add actual deployment commands here
+        # Example: docker build and push to staging registry
+        # Example: kubectl apply -f staging-deployment.yaml

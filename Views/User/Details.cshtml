@@ -1,0 +1,91 @@
+﻿@model AgileTaskManager.Models.ViewModels.UserListViewModel
+@{
+    ViewData["Title"] = Model.FullName;
+}
+
+<div class="atm-page-header">
+    <div>
+        <h2 class="atm-page-title">@Model.FullName</h2>
+        <p class="atm-page-sub">User profile and administrative controls</p>
+    </div>
+    <a asp-action="Index" class="atm-btn ghost"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-5">
+        <div class="atm-card">
+            <div class="atm-card-body text-center">
+                <div class="atm-comment-avatar lg mx-auto mb-3">
+                    @Model.FullName.Substring(0, 1).ToUpper()
+                </div>
+                <h5 class="atm-profile-name">@Model.FullName</h5>
+                <p class="text-muted mb-2">@Model.Email</p>
+                <span class="atm-role-tag @Model.Role.ToLower()">@Model.Role</span>
+
+                <hr class="atm-divider" />
+
+                <div class="row text-center g-2">
+                    <div class="col-6">
+                        <div class="atm-stat-mini">
+                            <div class="atm-stat-mini-val">@Model.AssignedTasksCount</div>
+                            <div class="atm-stat-mini-lbl">Assigned Tasks</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="atm-stat-mini">
+                            <div class="atm-stat-mini-val">
+                                @if (Model.IsActive)
+                                { <span class="atm-status-pill active">Active</span> }
+                                else
+                                { <span class="atm-status-pill inactive">Inactive</span> }
+                            </div>
+                            <div class="atm-stat-mini-lbl">Account Status</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="atm-card">
+            <div class="atm-card-header"><i class="bi bi-gear-fill me-2"></i>Admin Controls</div>
+            <div class="atm-card-body">
+                <div class="atm-form-group">
+                    <div class="atm-label mb-2">Role Management</div>
+                    @if (Model.Role == "Developer")
+                    {
+                        <p class="text-muted small mb-2">Only developer to admin promotion is allowed.</p>
+                        <form asp-action="AssignRole" method="post" class="d-flex gap-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="UserId" value="@Model.Id" />
+                            <input type="hidden" name="CurrentRole" value="@Model.Role" />
+                            <input type="hidden" name="NewRole" value="Admin" />
+                            <button type="submit" class="atm-btn primary">Promote to Admin</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <p class="text-muted small mb-0">
+                            Role changes are restricted for @Model.Role accounts.
+                        </p>
+                    }
+                </div>
+
+                <div class="atm-form-group mt-3">
+                    <div class="atm-label mb-2">Account Status</div>
+                    <form asp-action="ToggleActive" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit"
+                                class="atm-btn @(Model.IsActive ? "danger" : "primary")"
+                                onclick="return confirm('@(Model.IsActive ? "Deactivate" : "Activate") this user?')">
+                            <i class="bi @(Model.IsActive ? "bi-person-dash" : "bi-person-check") me-1"></i>
+                            @(Model.IsActive ? "Deactivate User" : "Activate User")
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

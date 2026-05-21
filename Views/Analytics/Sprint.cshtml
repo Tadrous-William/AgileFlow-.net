@@ -1,0 +1,468 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Sprint Analytics";
+    int sprintId = ViewBag.SprintId ?? 0;
+    int currentProjectId = ViewBag.CurrentProjectId ?? 0;
+}
+
+@if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+{
+    <div class="container-fluid">
+        <div class="alert alert-warning mt-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            @ViewBag.ErrorMessage
+        </div>
+    </div>
+    return;
+}
+
+@* Embed all sprint data as JSON so JS can filter by project without extra fetches *@
+@if (ViewBag.AvailableSprints != null)
+{
+    <script id="sprint-data" type="application/json">
+    [
+        @{
+            bool first = true;
+            foreach (var s in ViewBag.AvailableSprints)
+            {
+                if (!first) { @Html.Raw(",") }
+                first = false;
+                @Html.Raw($"{{\"id\":{s.Id},\"projectId\":{s.ProjectId},\"projectName\":{System.Text.Json.JsonSerializer.Serialize((string)s.Project.Name)},\"name\":{System.Text.Json.JsonSerializer.Serialize((string)s.Name)}}}")
+            }
+        }
+    ]
+    </script>
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="mb-0">📊 Sprint Analytics</h2>
+            <p class="text-muted mb-0">
+                Comprehensive sprint performance metrics and insights
+                &nbsp;<span id="sprintNameBadge" class="badge bg-primary fw-normal fs-6 d-none"></span>
+            </p>
+        </div>
+
+        @* ── Filter Bar ──────────────────────────────────────────────── *@
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+
+            @* Project filter *@
+            @if (ViewBag.AvailableProjects != null)
+            {
+                <div class="d-flex align-items-center gap-1">
+                    <label class="form-label mb-0 text-muted small fw-semibold text-nowrap" for="projectFilter">
+                        <i class="bi bi-folder2-open me-1"></i>Project
+                    </label>
+                    <select id="projectFilter" class="form-select form-select-sm" style="min-width: 180px;">
+                        <option value="0">All Projects</option>
+                        @foreach (var p in ViewBag.AvailableProjects)
+                        {
+                            if (p.Id == currentProjectId)
+                            {
+                                <option value="@p.Id" selected>@p.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@p.Id">@p.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+
+            @* Sprint filter *@
+            <div class="d-flex align-items-center gap-1">
+                <label class="form-label mb-0 text-muted small fw-semibold text-nowrap" for="sprintFilter">
+                    <i class="bi bi-lightning-charge me-1"></i>Sprint
+                </label>
+                <select id="sprintFilter" class="form-select form-select-sm" style="min-width: 210px;">
+                    @* Options populated by JS *@
+                </select>
+            </div>
+
+            <button class="btn btn-sm btn-outline-secondary" id="btnRefresh" title="Refresh data">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button class="btn btn-sm btn-primary" id="btnExport">
+                <i class="bi bi-download me-1"></i>Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="analyticsLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading analytics...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading sprint analytics...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="analyticsError" class="alert alert-danger d-none" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span id="errorMessage">Failed to load analytics</span>
+        <button class="btn btn-sm btn-outline-danger ms-2" id="btnRetry">Retry</button>
+    </div>
+
+    <!-- Analytics Content -->
+    <div id="analyticsContent" class="d-none">
+        <!-- Sprint Overview Cards -->
+        <div class="row mb-4" id="overviewCards">
+            <!-- Cards will be dynamically generated -->
+        </div>
+
+        <!-- Progress Section -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📈 Sprint Progress</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>Task Completion</span>
+                                    <span id="completionPercentage">0%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div id="completionProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>Sprint Progress</span>
+                                    <span id="sprintProgressPercentage">0%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div id="sprintProgressBar" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="burndownChart" style="height: 300px;">
+                            <!-- Burndown chart will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">🎯 Sprint Metrics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="sprintMetrics">
+                            <!-- Metrics will be dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Distribution Charts -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📋 Tasks by Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="taskStatusChart" style="height: 250px;">
+                            <!-- Task status chart will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">🚨 Tasks by Priority</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="taskPriorityChart" style="height: 250px;">
+                            <!-- Task priority chart will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Performance -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">👥 Team Performance</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="teamPerformanceTable">
+                                <thead>
+                                    <tr>
+                                        <th>Team Member</th>
+                                        <th>Assigned Tasks</th>
+                                        <th>Completed Tasks</th>
+                                        <th>Completion Rate</th>
+                                        <th>Overdue Tasks</th>
+                                        <th>Performance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teamPerformanceBody">
+                                    <!-- Team performance data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">🕐 Recent Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="recentActivity">
+                            <!-- Activity timeline will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/analytics.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ── Seed data from server-rendered JSON ─────────────────────────────
+            const sprintDataEl = document.getElementById('sprint-data');
+            const allSprints = sprintDataEl ? JSON.parse(sprintDataEl.textContent) : [];
+
+            const projectFilter = document.getElementById('projectFilter');
+            const sprintFilter  = document.getElementById('sprintFilter');
+            const btnRefresh    = document.getElementById('btnRefresh');
+            const btnExport     = document.getElementById('btnExport');
+            const btnRetry      = document.getElementById('btnRetry');
+
+            let currentSprintId = @sprintId;
+
+            // ── Populate sprint dropdown filtered by project ─────────────────
+            // isInit=true means we are setting up the page for the first time;
+            //   in that case we never auto-trigger loadAnalytics here because
+            //   analytics.init() handles the initial load below.
+            function populateSprintDropdown(projectId, isInit = false) {
+                const filtered = projectId == 0
+                    ? allSprints
+                    : allSprints.filter(s => s.projectId == projectId);
+
+                sprintFilter.innerHTML = '';
+                filtered.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = projectId == 0
+                        ? `${s.projectName} — ${s.name}`
+                        : s.name;
+                    if (s.id === currentSprintId) opt.selected = true;
+                    sprintFilter.appendChild(opt);
+                });
+
+                // If the currently-shown sprint isn't in the filtered list,
+                // select the first available one — but only trigger a reload
+                // when this is NOT the initial page render.
+                const stillPresent = filtered.some(s => s.id === currentSprintId);
+                if (!stillPresent && filtered.length > 0) {
+                    currentSprintId = filtered[0].id;
+                    sprintFilter.value = currentSprintId;
+                    if (!isInit) {
+                        loadAnalytics(currentSprintId);
+                    }
+                }
+            }
+
+            // ── Load analytics data for a sprint and re-render all charts ────
+            function loadAnalytics(sid) {
+                currentSprintId = Number(sid);
+                // Update browser URL so back/forward and bookmarks still work.
+                history.replaceState(null, '', `/Analytics/Sprint/${currentSprintId}`);
+                analytics.changeSprint(currentSprintId);
+            }
+
+            // ── Event: Project filter changes ────────────────────────────────
+            if (projectFilter) {
+                projectFilter.addEventListener('change', () => {
+                    // Rebuild sprint list — not an init call so auto-switch is allowed
+                    populateSprintDropdown(Number(projectFilter.value), false);
+                    // If populateSprintDropdown didn't already trigger a load
+                    // (sprint still present), force-load the first visible sprint.
+                    if (sprintFilter.options.length > 0) {
+                        loadAnalytics(sprintFilter.value);
+                    }
+                });
+            }
+
+            // ── Event: Sprint filter changes ─────────────────────────────────
+            sprintFilter.addEventListener('change', () => {
+                if (sprintFilter.value) {
+                    loadAnalytics(sprintFilter.value);
+                }
+            });
+
+            // ── Event: Refresh / Export / Retry ─────────────────────────────
+            if (btnRefresh) btnRefresh.addEventListener('click', () => analytics.refresh());
+            if (btnExport)  btnExport.addEventListener('click',  () => analytics.exportReport());
+            if (btnRetry)   btnRetry.addEventListener('click',   () => analytics.refresh());
+
+            // ── Bootstrap: populate dropdowns then load initial sprint ───────
+            // Pass isInit=true so populateSprintDropdown doesn't race with init().
+            const initialProjectId = @currentProjectId;
+            populateSprintDropdown(initialProjectId, true);
+
+            if (currentSprintId > 0) {
+                analytics.init(currentSprintId, 'sprint');
+            }
+        });
+    </script>
+}
+
+<style>
+.metric-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+}
+
+.metric-card.success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.metric-card.warning {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+}
+
+.metric-card.danger {
+    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+}
+
+.metric-card.info {
+    background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+.metric-change {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.performance-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.performance-excellent {
+    background: #d4edda;
+    color: #155724;
+}
+
+.performance-good {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.performance-average {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.performance-poor {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.activity-item {
+    display: flex;
+    align-items: start;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.activity-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.activity-description {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.activity-time {
+    font-size: 0.75rem;
+    color: #adb5bd;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+/* Filter bar polish */
+#projectFilter, #sprintFilter {
+    border-radius: 8px;
+    font-size: 0.875rem;
+    border-color: #dee2e6;
+    transition: border-color 0.15s ease;
+}
+#projectFilter:focus, #sprintFilter:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.2rem rgba(13,110,253,.15);
+}
+</style>

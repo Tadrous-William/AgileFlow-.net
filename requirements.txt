@@ -1,0 +1,113 @@
+# Requirements — Agile Task Manager
+
+## Runtime Requirements
+
+### .NET SDK
+- **Version**: .NET 9.0 (SDK 9.0.x or later)
+- **Download**: https://dotnet.microsoft.com/download/dotnet/9.0
+
+### Database
+- **SQL Server** (any of the following):
+  - SQL Server 2019 / 2022 (recommended for production)
+  - SQL Server Express (free, dev/test)
+  - SQL Server LocalDB (included with Visual Studio — zero config)
+- **Minimum version**: SQL Server 2016+ (required for JSON support)
+
+---
+
+## Development Tools
+
+| Tool | Version | Notes |
+|---|---|---|
+| Visual Studio 2022 | 17.8+ | Or VS Code / JetBrains Rider |
+| .NET 9 SDK | 9.0.x | Required |
+| EF Core CLI (`dotnet-ef`) | 9.0.4 | Auto-restored via `dotnet tool restore` |
+| SQL Server / LocalDB | Any | LocalDB ships with Visual Studio |
+
+---
+
+## NuGet Packages (auto-restored via `dotnet restore`)
+
+| Package | Version | Purpose |
+|---|---|---|
+| `Microsoft.AspNetCore.Identity.EntityFrameworkCore` | 9.0.4 | Identity + EF Core integration |
+| `Microsoft.EntityFrameworkCore.SqlServer` | 9.0.4 | SQL Server database provider |
+| `Microsoft.EntityFrameworkCore.Tools` | 9.0.4 | Migration CLI tooling |
+| `Microsoft.EntityFrameworkCore.Design` | 9.0.4 | Design-time EF scaffolding |
+| `MailKit` | 4.16.0 | SMTP email delivery |
+| `EPPlus` | 5.8.14 | Excel (.xlsx) report export |
+| `CloudinaryDotNet` | 1.26.0 | Cloud file/image storage |
+| `AutoMapper.Extensions.Microsoft.DependencyInjection` | 12.0.1 | Entity ↔ ViewModel mapping |
+| `Swashbuckle.AspNetCore` | 6.5.0 | Swagger / OpenAPI documentation |
+| `QuestPDF` | 2023.12.6 | PDF report generation |
+
+---
+
+## External Service Configuration (Optional)
+
+These services are **optional**. The app runs fully without them — features degrade gracefully.
+
+### Email (MailKit / Gmail SMTP)
+Required only if you want transactional emails.
+```
+SmtpHost:    smtp.gmail.com
+SmtpPort:    587
+Username:    your-gmail@gmail.com
+Password:    your-gmail-app-password   ← NOT your login password; use an App Password
+```
+> Gmail App Password: Google Account → Security → 2-Step Verification → App Passwords
+
+### File Storage (Cloudinary)
+Required only for task attachment uploads. Without it, file upload features are disabled.
+```
+CloudName:   your-cloud-name
+ApiKey:      your-api-key
+ApiSecret:   your-api-secret
+```
+> Sign up free at https://cloudinary.com
+
+### AI Assistant (OpenAI)
+Required only for AI-generated task descriptions/titles/tags. Without an API key, the app
+falls back to built-in rule-based suggestions automatically.
+```
+Provider:    OpenAI
+ApiKey:      sk-...
+Model:       gpt-3.5-turbo    (or gpt-4o, etc.)
+Endpoint:    https://api.openai.com/v1/chat/completions
+MaxTokens:   500
+Temperature: 0.7
+```
+> OpenAI API keys: https://platform.openai.com/api-keys
+
+---
+
+## Quick Setup Steps
+
+```bash
+# 1. Restore EF CLI tool (one-time per machine)
+dotnet tool restore
+
+# 2. Restore NuGet packages
+dotnet restore
+
+# 3. Run the application (auto-applies migrations + seeds demo data)
+dotnet run
+```
+
+The app will be available at: `https://localhost:5001`
+
+> **No manual `dotnet ef database update` needed** — migrations are applied automatically on startup.
+
+---
+
+## Production Checklist
+
+- [ ] Replace LocalDB connection string with production SQL Server
+- [ ] Set strong `AdminSettings:RegistrationSecret`
+- [ ] Configure SMTP credentials for email
+- [ ] Set `ASPNETCORE_ENVIRONMENT=Production`
+- [ ] Configure HTTPS certificate
+- [ ] Set up Cloudinary for file storage
+- [ ] Add OpenAI API key if AI features are needed
+- [ ] Review and restrict CORS policy in `Program.cs` (currently allows any origin)
+- [ ] Disable the `WipeAllDataAsync` call in `DbSeeder.cs` to preserve production data

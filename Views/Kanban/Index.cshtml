@@ -1,0 +1,371 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Kanban Board";
+    int? projectId = ViewBag.ProjectId;
+    int? sprintId = ViewBag.SprintId;
+}
+
+<div class="container-fluid">
+    @if (projectId == null)
+    {
+        <!-- Project Selector -->
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h4 class="mb-3">📋 Select a Project</h4>
+                        <p class="text-muted mb-4">Choose a project to view its Kanban board</p>
+                        <select id="projectSelector" class="form-select form-select-lg mb-3">
+                            <option value="">Loading projects...</option>
+                        </select>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button class="btn btn-primary btn-lg" onclick="kanban.loadSelectedProject()">
+                                <i class="bi bi-arrow-right-circle"></i> Open Kanban Board
+                            </button>
+                            <button class="btn btn-outline-primary btn-lg" onclick="kanban.showCreateProjectModal()">
+                                <i class="bi bi-plus-lg"></i> Create Project
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Kanban Board Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h2 class="mb-0">📋 Kanban Board</h2>
+                <p class="text-muted mb-0">Drag and drop tasks to update their status</p>
+            </div>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                @if (ViewBag.Sprints != null && ((IEnumerable<AgileTaskManager.Models.Entities.Sprint>)ViewBag.Sprints).Any())
+                {
+                    <div class="d-flex align-items-center gap-1">
+                        <label class="form-label mb-0 text-muted small fw-semibold text-nowrap">
+                            <i class="bi bi-lightning-charge me-1"></i>Sprint:
+                        </label>
+                        <select id="boardSprintSelector" class="form-select form-select-sm" style="min-width:180px;"
+                                onchange="kanban.switchSprint(this.value)">
+                            @foreach (var s in (IEnumerable<AgileTaskManager.Models.Entities.Sprint>)ViewBag.Sprints)
+                            {
+                                int sid = s.Id;
+                                int? curSprint = ViewBag.SprintId;
+                                bool isSelected = (curSprint == sid);
+                                <option value="@s.Id" selected="@isSelected">
+                                    @s.Name (@s.Status)
+                                </option>
+                            }
+                        </select>
+                    </div>
+                }
+                <button class="btn btn-outline-primary btn-sm" onclick="kanban.refreshBoard()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="kanban.showCreateTaskModal()">
+                    <i class="bi bi-plus-lg"></i> New Task
+                </button>
+            </div>
+        </div>
+    }
+
+    <!-- Loading State -->
+    <div id="kanbanLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading Kanban board...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="kanbanError" class="alert alert-danger d-none" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span id="errorMessage">Failed to load Kanban board</span>
+        <button class="btn btn-sm btn-outline-danger ms-2" onclick="kanban.refreshBoard()">Retry</button>
+    </div>
+
+    <!-- Kanban Board -->
+    <div id="kanbanBoard" class="d-none">
+        <div class="row g-3" id="kanbanColumns">
+            <!-- Columns will be dynamically generated -->
+        </div>
+    </div>
+</div>
+
+<!-- Create Project Modal -->
+<div class="modal fade" id="createProjectModal" tabindex="-1" aria-labelledby="createProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createProjectModalLabel">
+                    <i class="bi bi-folder-plus me-2"></i>Create New Project
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createProjectForm" onsubmit="kanban.createProject(event)">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="projectName" class="form-label">Project Name *</label>
+                        <input type="text" class="form-control" id="projectName" name="projectName" required maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="projectDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="projectDescription" name="projectDescription" rows="3" maxlength="500"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="projectStartDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="projectStartDate" name="projectStartDate">
+                    </div>
+                    <div class="mb-3">
+                        <label for="projectEndDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="projectEndDate" name="projectEndDate">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i>Create Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Task Modal -->
+<div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="taskModalLabel">Create Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm">
+                    <input type="hidden" id="taskId" name="id" />
+                    <input type="hidden" id="taskProjectId" name="projectId" value="@projectId" />
+                    <input type="hidden" id="taskSprintId" name="sprintId" value="@sprintId" />
+                    
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label for="taskTitle" class="form-label">Title *</label>
+                            <input type="text" class="form-control" id="taskTitle" name="title" required maxlength="200" />
+                            <div class="form-text">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="kanban.generateDescription()">
+                                    <i class="bi bi-magic"></i> AI Generate Description
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="taskPriority" class="form-label">Priority</label>
+                            <select class="form-select" id="taskPriority" name="priority">
+                                <option value="1">Low</option>
+                                <option value="2" selected>Medium</option>
+                                <option value="3">High</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <label for="taskDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="taskDescription" name="description" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-4">
+                            <label for="taskAssignedTo" class="form-label">Assigned To</label>
+                            <select class="form-select" id="taskAssignedTo" name="assignedToId">
+                                <option value="">Unassigned</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="taskStartDate" class="form-label">Start Date</label>
+                            <input type="datetime-local" class="form-control" id="taskStartDate" name="startDate" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="taskDeadline" class="form-label">Deadline</label>
+                            <input type="datetime-local" class="form-control" id="taskDeadline" name="deadline" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="taskEstimatedHours" class="form-label">Est. Hours</label>
+                            <input type="number" class="form-control" id="taskEstimatedHours" name="estimatedHours" min="0.5" step="0.5" placeholder="2.0" />
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <label for="taskDependsOn" class="form-label">Depends On</label>
+                        <select class="form-select" id="taskDependsOn" name="dependsOnId">
+                            <option value="">No Dependency</option>
+                        </select>
+                        <div class="form-text">Task cannot start until the selected task is completed</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="kanban.saveTask()">Save Task</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Details Modal -->
+<div class="modal fade" id="taskDetailsModal" tabindex="-1" aria-labelledby="taskDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="taskDetailsModalLabel">Task Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="taskDetailsContent">
+                <!-- Task details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+@section Scripts {
+    <script src="~/js/kanban.js"></script>
+    <script>
+        // Initialize Kanban board
+        document.addEventListener('DOMContentLoaded', () => {
+            const projectId = @(projectId.HasValue ? projectId.Value.ToString() : "null");
+            const sprintId = @(sprintId.HasValue ? sprintId.Value.ToString() : "null");
+            kanban.init(projectId, sprintId);
+        });
+    </script>
+}
+
+<style>
+.kanban-column {
+    min-height: 600px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 2px dashed #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.kanban-column.drag-over {
+    border-color: #0d6efd;
+    background: #e7f1ff;
+}
+
+.kanban-column-header {
+    padding: 1rem;
+    border-bottom: 2px solid #dee2e6;
+    background: white;
+    border-radius: 6px 6px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.kanban-column-body {
+    padding: 1rem;
+    min-height: 500px;
+}
+
+.kanban-task {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    cursor: move;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.kanban-task:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.kanban-task.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+.kanban-task.priority-high {
+    border-left: 4px solid #dc3545;
+}
+
+.kanban-task.priority-medium {
+    border-left: 4px solid #ffc107;
+}
+
+.kanban-task.priority-low {
+    border-left: 4px solid #28a745;
+}
+
+.kanban-task.blocked {
+    background: #fff5f5;
+    border-color: #feb2b2;
+}
+
+.kanban-task.overdue {
+    background: #fffbf0;
+    border-color: #f6ad55;
+}
+
+.task-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2d3748;
+}
+
+.task-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #718096;
+}
+
+.task-assignee {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.task-deadline {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.task-dependency {
+    background: #e2e8f0;
+    color: #4a5568;
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.status-todo { border-bottom-color: #6c757d; }
+.status-inprogress { border-bottom-color: #0d6efd; }
+.status-testing { border-bottom-color: #ffc107; }
+.status-done { border-bottom-color: #28a745; }
+
+/* Drag and drop animations */
+.drop-indicator {
+    height: 2px;
+    background: #0d6efd;
+    margin: 0.25rem 0;
+    border-radius: 1px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.drop-indicator.active {
+    opacity: 1;
+}
+
+/* Responsive adjustments */
+</style>
+
+@* Note: initialization happens in the Scripts section above (avoid double-init). *@

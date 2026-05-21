@@ -1,0 +1,89 @@
+@model AgileTaskManager.Models.ViewModels.TaskCreateViewModel
+@{
+    ViewData["Title"] = "Create Task";
+}
+
+<div class="atm-page-header">
+    <div>
+        <h2 class="atm-page-title">Create Task</h2>
+        <p class="atm-page-sub">Fill in the details below</p>
+    </div>
+    <a asp-action="Index" class="atm-btn ghost"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="atm-card">
+            <div class="atm-card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="alert alert-danger small mb-3" style="display:none"></div>
+
+                    <div class="atm-form-group">
+                        <label asp-for="Title" class="atm-label">Title *</label>
+                        <input asp-for="Title" class="atm-input" placeholder="Task title…" />
+                        <span asp-validation-for="Title" class="atm-validation"></span>
+                    </div>
+
+                    <div class="atm-form-group">
+                        <label asp-for="Description" class="atm-label">Description</label>
+                        <textarea asp-for="Description" class="atm-textarea" rows="4" placeholder="Describe the task…"></textarea>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-4">
+                            <div class="atm-form-group">
+                                <label asp-for="Priority" class="atm-label">Priority *</label>
+                                <select asp-for="Priority" class="atm-select"
+                                        asp-items="Html.GetEnumSelectList<AgileTaskManager.Models.Enums.TaskPriority>()">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="atm-form-group">
+                                <label asp-for="StartDate" class="atm-label">Start Date</label>
+                                <input asp-for="StartDate" type="datetime-local" class="atm-input" />
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="atm-form-group">
+                                <label asp-for="Deadline" class="atm-label">Deadline</label>
+                                <input asp-for="Deadline" type="datetime-local" class="atm-input" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="atm-form-group">
+                        <label asp-for="AssignedToId" class="atm-label">Assign To</label>
+                        <select asp-for="AssignedToId" class="atm-select" asp-items="ViewBag.Members">
+                            <option value="">— Unassigned —</option>
+                        </select>
+                    </div>
+
+                    <div class="atm-form-group">
+                        <label asp-for="DependsOnId" class="atm-label">Depends On (optional)</label>
+                        <select asp-for="DependsOnId" class="atm-select">
+                            <option value="">— No dependency —</option>
+                            @foreach (var t in (ViewBag.AllTasks as List<AgileTaskManager.Models.ViewModels.TaskListViewModel> ?? new()))
+                            {
+                                <option value="@t.Id">@t.Title</option>
+                            }
+                        </select>
+                        <small class="text-muted">This task will be blocked until the selected task is done.</small>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="atm-btn primary">
+                            <i class="bi bi-plus-lg"></i> Create Task
+                        </button>
+                        <a asp-action="Index" class="atm-btn ghost">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

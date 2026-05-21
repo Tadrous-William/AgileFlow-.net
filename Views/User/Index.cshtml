@@ -1,0 +1,110 @@
+﻿@model List<AgileTaskManager.Models.ViewModels.UserListViewModel>
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="atm-page-header">
+    <div>
+        <h2 class="atm-page-title">Manage Users</h2>
+        <p class="atm-page-sub">@Model.Count developer(s) registered</p>
+    </div>
+</div>
+
+<div class="atm-card">
+    <div class="atm-card-body p-0">
+        <table class="atm-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Tasks</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="atm-comment-avatar sm">
+                                    @u.FullName.Substring(0, 1).ToUpper()
+                                </div>
+                                <span class="fw-semibold">@u.FullName</span>
+                            </div>
+                        </td>
+                        <td class="text-muted">@u.Email</td>
+                        <td><span class="atm-role-tag @u.Role.ToLower()">@u.Role</span></td>
+                        <td>@u.AssignedTasksCount task(s)</td>
+                        <td>
+                            @if (u.IsActive)
+                            {
+                                <span class="atm-status done">Active</span>
+                            }
+                            else
+                            {
+                                <span class="atm-status todo">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="atm-actions">
+                                <a asp-action="Details" asp-route-id="@u.Id" class="atm-action-btn" title="Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                                @if (u.Role == "Developer")
+                                {
+                                    <!-- Promote Developer to Admin -->
+                                    <button class="atm-action-btn" title="Promote to Admin"
+                                            data-bs-toggle="modal" data-bs-target="#roleModal-@u.Id">
+                                        <i class="bi bi-arrow-up-circle"></i>
+                                    </button>
+                                }
+
+                                <!-- Toggle Active -->
+                                <form asp-action="ToggleActive" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@u.Id" />
+                                    <button type="submit" class="atm-action-btn @(!u.IsActive ? "success" : "danger")"
+                                            title="@(u.IsActive ? "Deactivate" : "Activate")"
+                                            onclick="return confirm('@(u.IsActive ? "Deactivate" : "Activate") this user?')">
+                                        <i class="bi @(u.IsActive ? "bi-person-dash" : "bi-person-check")"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+                            @if (u.Role == "Developer")
+                            {
+                                <!-- Promote Modal -->
+                                <div class="modal fade" id="roleModal-@u.Id" tabindex="-1">
+                                    <div class="modal-dialog modal-sm">
+                                        <div class="modal-content atm-modal">
+                                            <div class="modal-header">
+                                                <h6 class="modal-title">Promote to Admin — @u.FullName</h6>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p class="text-muted small mb-3">
+                                                    This action promotes this developer to admin. Other role changes are restricted.
+                                                </p>
+                                                <form asp-action="AssignRole" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="UserId" value="@u.Id" />
+                                                    <input type="hidden" name="CurrentRole" value="@u.Role" />
+                                                    <input type="hidden" name="NewRole" value="Admin" />
+                                                    <button type="submit" class="atm-btn primary w-100">Confirm Promotion</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

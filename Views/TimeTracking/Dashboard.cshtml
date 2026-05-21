@@ -1,0 +1,319 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Time Tracking Dashboard";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">⏱️ Time Tracking Dashboard</h2>
+            <p class="text-muted mb-0">Track your time, analyze productivity, and manage timesheets</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" onclick="timeTracking.refresh()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+            <button class="btn btn-success" onclick="timeTracking.showTimer()">
+                <i class="bi bi-play-fill"></i> Start Timer
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="timeTrackingLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading dashboard...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading time tracking dashboard...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="timeTrackingError" class="alert alert-danger d-none" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span id="errorMessage">Failed to load dashboard</span>
+        <button class="btn btn-sm btn-outline-danger ms-2" onclick="timeTracking.refresh()">Retry</button>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div id="timeTrackingContent" class="d-none">
+        <!-- Today's Stats -->
+        <div class="row mb-4" id="todayStats">
+            <!-- Stats will be dynamically generated -->
+        </div>
+
+        <!-- Active Timer -->
+        <div class="row mb-4" id="activeTimerSection">
+            <!-- Active timer will be shown here -->
+        </div>
+
+        <!-- Recent Entries and Charts -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📊 Time Analytics</h5>
+                        <div class="float-end">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary active" onclick="timeTracking.changeChartView('daily', this)">Daily</button>
+                                <button class="btn btn-outline-primary" onclick="timeTracking.changeChartView('weekly', this)">Weekly</button>
+                                <button class="btn btn-outline-primary" onclick="timeTracking.changeChartView('monthly', this)">Monthly</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="timeChart" style="height: 300px;">
+                            <!-- Time chart will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">🎯 Task Breakdown</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="taskBreakdown">
+                            <!-- Task breakdown will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Time Entries -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📝 Recent Time Entries</h5>
+                        <div class="float-end">
+                            <button class="btn btn-sm btn-outline-primary" onclick="timeTracking.showAddEntryModal()">
+                                <i class="bi bi-plus"></i> Add Entry
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="timeEntriesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Task</th>
+                                        <th>Duration</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="timeEntriesBody">
+                                    <!-- Time entries will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Timer Modal -->
+<div class="modal fade" id="timerModal" tabindex="-1" aria-labelledby="timerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="timerModalLabel">⏱️ Time Tracker</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <form id="timerForm">
+                    <div class="mb-3">
+                        <label for="timerTask" class="form-label">Select Task *</label>
+                        <select class="form-select" id="timerTask" required>
+                            <option value="">Choose a task...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="timerDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="timerDescription" rows="2" placeholder="What are you working on?"></textarea>
+                    </div>
+                    
+                    <div class="timer-display mb-3">
+                        <div class="display-4" id="timerDisplay">00:00:00</div>
+                        <div class="text-muted" id="timerTaskName"></div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-success" id="startTimerBtn" onclick="timeTracking.startTimer()">
+                            <i class="bi bi-play-fill"></i> Start Timer
+                        </button>
+                        <button type="button" class="btn btn-danger d-none" id="stopTimerBtn" onclick="timeTracking.stopTimer()">
+                            <i class="bi bi-stop-fill"></i> Stop Timer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Entry Modal -->
+<div class="modal fade" id="addEntryModal" tabindex="-1" aria-labelledby="addEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addEntryModalLabel">📝 Add Time Entry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addEntryForm">
+                    <div class="mb-3">
+                        <label for="entryTask" class="form-label">Task *</label>
+                        <select class="form-select" id="entryTask" required>
+                            <option value="">Choose a task...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="entryStartTime" class="form-label">Start Time *</label>
+                            <input type="datetime-local" class="form-control" id="entryStartTime" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="entryEndTime" class="form-label">End Time</label>
+                            <input type="datetime-local" class="form-control" id="entryEndTime">
+                            <div class="form-text">Leave empty for ongoing timer</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="entryDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="entryDescription" rows="3" placeholder="What did you work on?"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="timeTracking.saveEntry()">Save Entry</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/time-tracking.js"></script>
+    <script>
+        // Initialize time tracking dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            timeTracking.init();
+        });
+    </script>
+}
+
+<style>
+.timer-display {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin: 1rem 0;
+}
+
+.timer-display .display-4 {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+}
+
+.time-entry-row {
+    transition: background-color 0.2s ease;
+}
+
+.time-entry-row:hover {
+    background-color: #f8f9fa;
+}
+
+.duration-badge {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.duration-short {
+    background: #d4edda;
+    color: #155724;
+}
+
+.duration-medium {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.duration-long {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-active {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.task-breakdown-item {
+    display: flex;
+    justify-content-between align-items-center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.task-breakdown-item:last-child {
+    border-bottom: none;
+}
+
+.task-name {
+    font-weight: 500;
+    color: #495057;
+}
+
+.task-time {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #6c757d;
+}
+
+.task-progress {
+    width: 100%;
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    margin-top: 0.25rem;
+    overflow: hidden;
+}
+
+.task-progress-bar {
+    height: 100%;
+    background: #0d6efd;
+    transition: width 0.3s ease;
+}
+
+.active-timer-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #28a745;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+    margin-right: 0.5rem;
+}
+
+
+</style>

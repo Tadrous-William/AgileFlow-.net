@@ -1,0 +1,67 @@
+@model List<AgileTaskManager.Models.ViewModels.NotificationViewModel>
+@{
+    ViewData["Title"] = "Notifications";
+    var unread = Model.Count(n => !n.IsRead);
+}
+
+<div class="atm-page-header">
+    <div>
+        <h2 class="atm-page-title">Notifications</h2>
+        <p class="atm-page-sub">@unread unread</p>
+    </div>
+    @if (unread > 0)
+    {
+        <form asp-action="MarkAllRead" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="atm-btn secondary">
+                <i class="bi bi-check2-all"></i> Mark all read
+            </button>
+        </form>
+    }
+</div>
+
+<div class="atm-card">
+    <div class="atm-card-body p-0">
+        @if (!Model.Any())
+        {
+            <div class="atm-empty">
+                <i class="bi bi-bell-slash" style="font-size:2rem;opacity:.3;"></i>
+                <p>You're all caught up!</p>
+            </div>
+        }
+        else
+        {
+            <ul class="atm-notif-list">
+                @foreach (var n in Model)
+                {
+                    <li class="atm-notif-item @(!n.IsRead ? "unread" : "")">
+                        <div class="atm-notif-icon">
+                            <i class="bi bi-bell@(!n.IsRead ? "-fill" : "")"></i>
+                        </div>
+                        <div class="atm-notif-body">
+                            @if (!string.IsNullOrEmpty(n.Link))
+                            {
+                                <a href="@n.Link" class="atm-notif-message">@n.Message</a>
+                            }
+                            else
+                            {
+                                <div class="atm-notif-message">@n.Message</div>
+                            }
+                            <div class="atm-notif-time">@n.CreatedAt.ToString("dd MMM yyyy, HH:mm")</div>
+                        </div>
+                        @if (!n.IsRead)
+                        {
+                            <form asp-action="MarkAsRead" method="post" class="ms-auto">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@n.Id" />
+                                <button type="submit" class="atm-action-btn" title="Mark as read">
+                                    <i class="bi bi-check2"></i>
+                                </button>
+                            </form>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

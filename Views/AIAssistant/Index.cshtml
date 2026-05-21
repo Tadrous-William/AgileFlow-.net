@@ -1,0 +1,384 @@
+@model dynamic
+@{
+    ViewData["Title"] = "AI Assistant";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">🤖 AI Assistant</h2>
+            <p class="text-muted mb-0">Smart task management with AI-powered assistance</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- AI Tools Panel -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">🛠️ AI Tools</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" onclick="aiAssistant.showDescriptionGenerator()">
+                            <i class="bi bi-magic"></i> Generate Description
+                        </button>
+                        <button class="btn btn-info" onclick="aiAssistant.showTitleSuggester()">
+                            <i class="bi bi-lightbulb"></i> Suggest Title
+                        </button>
+                        <button class="btn btn-success" onclick="aiAssistant.showTagGenerator()">
+                            <i class="bi bi-tags"></i> Generate Tags
+                        </button>
+                        <button class="btn btn-warning" onclick="aiAssistant.showTaskAnalyzer()">
+                            <i class="bi bi-graph-up"></i> Analyze Task
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Settings -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">⚙️ Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="autoGenerate" checked>
+                        <label class="form-check-label" for="autoGenerate">
+                            Auto-generate suggestions
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="showConfidence" checked>
+                        <label class="form-check-label" for="showConfidence">
+                            Show confidence scores
+                        </label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="enableNotifications">
+                        <label class="form-check-label" for="enableNotifications">
+                            Enable notifications
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent AI Activities -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">📝 Recent Activities</h5>
+                </div>
+                <div class="card-body">
+                    <div id="recentActivities" class="small">
+                        <p class="text-muted">No recent AI activities</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main AI Workspace -->
+        <div class="col-lg-8">
+            <!-- Description Generator -->
+            <div id="descriptionGenerator" class="card d-none">
+                <div class="card-header">
+                    <h5 class="mb-0">✍️ Description Generator</h5>
+                    <button type="button" class="btn-close float-end" onclick="aiAssistant.hideAllTools()"></button>
+                </div>
+                <div class="card-body">
+                    <form id="descriptionForm">
+                        <div class="mb-3">
+                            <label for="taskTitle" class="form-label">Task Title *</label>
+                            <input type="text" class="form-control" id="taskTitle" placeholder="Enter task title..." required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="projectContext" class="form-label">Project Context</label>
+                            <textarea class="form-control" id="projectContext" rows="2" placeholder="Optional: Provide project context..."></textarea>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary" onclick="aiAssistant.generateDescription()">
+                                <i class="bi bi-magic"></i> Generate
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="aiAssistant.clearDescriptionForm()">
+                                <i class="bi bi-arrow-clockwise"></i> Clear
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="descriptionResult" class="mt-3 d-none">
+                        <h6>Generated Description:</h6>
+                        <div class="border rounded p-3 bg-light">
+                            <div id="generatedDescription"></div>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-success" onclick="aiAssistant.copyDescription()">
+                                    <i class="bi bi-clipboard"></i> Copy
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="aiAssistant.useDescription()">
+                                    <i class="bi bi-check"></i> Use This
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Title Suggester -->
+            <div id="titleSuggester" class="card d-none">
+                <div class="card-header">
+                    <h5 class="mb-0">💡 Title Suggester</h5>
+                    <button type="button" class="btn-close float-end" onclick="aiAssistant.hideAllTools()"></button>
+                </div>
+                <div class="card-body">
+                    <form id="titleForm">
+                        <div class="mb-3">
+                            <label for="taskDescription" class="form-label">Task Description *</label>
+                            <textarea class="form-control" id="taskDescription" rows="4" placeholder="Enter task description..." required></textarea>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-info" onclick="aiAssistant.suggestTitle()">
+                                <i class="bi bi-lightbulb"></i> Suggest Titles
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="aiAssistant.clearTitleForm()">
+                                <i class="bi bi-arrow-clockwise"></i> Clear
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="titleResults" class="mt-3 d-none">
+                        <h6>Suggested Titles:</h6>
+                        <div id="suggestedTitles" class="list-group">
+                            <!-- Titles will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tag Generator -->
+            <div id="tagGenerator" class="card d-none">
+                <div class="card-header">
+                    <h5 class="mb-0">🏷️ Tag Generator</h5>
+                    <button type="button" class="btn-close float-end" onclick="aiAssistant.hideAllTools()"></button>
+                </div>
+                <div class="card-body">
+                    <form id="tagForm">
+                        <div class="mb-3">
+                            <label for="tagTaskTitle" class="form-label">Task Title</label>
+                            <input type="text" class="form-control" id="tagTaskTitle" placeholder="Enter task title...">
+                        </div>
+                        <div class="mb-3">
+                            <label for="tagTaskDescription" class="form-label">Task Description</label>
+                            <textarea class="form-control" id="tagTaskDescription" rows="3" placeholder="Enter task description..."></textarea>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-success" onclick="aiAssistant.generateTags()">
+                                <i class="bi bi-tags"></i> Generate Tags
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="aiAssistant.clearTagForm()">
+                                <i class="bi bi-arrow-clockwise"></i> Clear
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="tagResults" class="mt-3 d-none">
+                        <h6>Generated Tags:</h6>
+                        <div id="generatedTags">
+                            <!-- Tags will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Analyzer -->
+            <div id="taskAnalyzer" class="card d-none">
+                <div class="card-header">
+                    <h5 class="mb-0">📊 Task Analyzer</h5>
+                    <button type="button" class="btn-close float-end" onclick="aiAssistant.hideAllTools()"></button>
+                </div>
+                <div class="card-body">
+                    <form id="analyzerForm">
+                        <div class="mb-3">
+                            <label for="analyzerTaskId" class="form-label">Select Task</label>
+                            <select class="form-select" id="analyzerTaskId">
+                                <option value="">Choose a task to analyze...</option>
+                            </select>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-warning" onclick="aiAssistant.analyzeTask()">
+                                <i class="bi bi-graph-up"></i> Analyze
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="analysisResults" class="mt-3 d-none">
+                        <h6>Analysis Results:</h6>
+                        <div id="analysisContent">
+                            <!-- Analysis will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Welcome Screen -->
+            <div id="welcomeScreen" class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-robot" style="font-size: 4rem; color: #6c757d;"></i>
+                    <h4 class="mt-3">AI Assistant Ready</h4>
+                    <p class="text-muted">Choose a tool from the left panel to get started with AI-powered task management assistance.</p>
+                    <div class="row mt-4">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="bi bi-magic" style="font-size: 2rem; color: #0d6efd;"></i>
+                                <h6 class="mt-2">Generate</h6>
+                                <small class="text-muted">Create task descriptions</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="bi bi-lightbulb" style="font-size: 2rem; color: #ffc107;"></i>
+                                <h6 class="mt-2">Suggest</h6>
+                                <small class="text-muted">Get title suggestions</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="bi bi-tags" style="font-size: 2rem; color: #28a745;"></i>
+                                <h6 class="mt-2">Tag</h6>
+                                <small class="text-muted">Auto-generate tags</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="bi bi-graph-up" style="font-size: 2rem; color: #fd7e14;"></i>
+                                <h6 class="mt-2">Analyze</h6>
+                                <small class="text-muted">Task insights</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="aiLoading" class="d-none">
+    <div class="d-flex justify-content-center align-items-center" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999;">
+        <div class="text-center text-white">
+            <div class="spinner-border mb-3" role="status"></div>
+            <p>AI is thinking...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+@section Scripts {
+    <script src="~/js/ai-assistant.js"></script>
+    <script>
+        // Initialize AI Assistant
+        document.addEventListener('DOMContentLoaded', () => {
+            aiAssistant.init();
+        });
+    </script>
+}
+
+<style>
+.ai-tool-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.ai-tool-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.suggestion-item {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
+
+.tag-item {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    margin: 0.25rem;
+    background: #e9ecef;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tag-item:hover {
+    background: #dee2e6;
+    transform: scale(1.05);
+}
+
+.confidence-badge {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 10px;
+}
+
+.confidence-high {
+    background: #d4edda;
+    color: #155724;
+}
+
+.confidence-medium {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.confidence-low {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.analysis-metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.analysis-metric:last-child {
+    border-bottom: none;
+}
+
+.activity-item {
+    display: flex;
+    align-items: start;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.activity-content {
+    flex: 1;
+    font-size: 0.875rem;
+}
+
+.activity-time {
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+</style>

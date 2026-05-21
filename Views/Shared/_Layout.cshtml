@@ -1,0 +1,221 @@
+@using AgileTaskManager.Constants
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Agile Task Manager</title>
+
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="atm-body">
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <!-- Sidebar -->
+    <nav class="atm-sidebar" id="sidebar" aria-label="Primary navigation">
+        <div class="atm-sidebar-brand">
+            <span class="atm-brand-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+            <span class="atm-brand-text">AgileFlow</span>
+        </div>
+
+        <ul class="atm-nav-list">
+            <li class="atm-nav-section">MAIN</li>
+            <li>
+                <a asp-controller="Dashboard" asp-action="Index" class="atm-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                </a>
+            </li>
+
+            @* Tasks — hidden from Clients *@
+            @if (!User.IsInRole(RoleConstants.Client))
+            {
+                <li>
+                    <a asp-controller="Task" asp-action="Index" class="atm-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Task" ? "active" : "")">
+                        <i class="bi bi-check2-square"></i> Tasks
+                    </a>
+                </li>
+            }
+
+            <li>
+                <a asp-controller="Notification" asp-action="Index" class="atm-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Notification" ? "active" : "")">
+                    <i class="bi bi-bell-fill"></i> Notifications
+                    @{
+                        var unread = ViewBag.UnreadCount as int? ?? 0;
+                    }
+                    @if (unread > 0)
+                    {
+                        <span class="atm-badge">@unread</span>
+                    }
+                </a>
+            </li>
+
+            <li class="atm-nav-section">AGILE FEATURES</li>
+
+            @* Kanban, Sprints & Analytics — Admin & TeamLead only *@
+            @if (User.IsInRole(RoleConstants.Admin) || User.IsInRole(RoleConstants.TeamLead))
+            {
+                <li>
+                    <a asp-controller="Kanban" asp-action="Index" class="atm-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Kanban" ? "active" : "")">
+                        <i class="bi bi-kanban"></i> Kanban Board
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Sprint" asp-action="Index" class="atm-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Sprint" ? "active" : "")">
+                        <i class="bi bi-lightning-charge"></i> Sprints
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Analytics" asp-action="Sprint" class="atm-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Analytics" ? "active" : "")">
+                        <i class="bi bi-graph-up"></i> Sprint Analytics
+                    </a>
+                </li>
+            }
+
+            @* Sprint Analytics — also visible to Developer & Client (read-only) *@
+            @if (User.IsInRole(RoleConstants.Developer) || User.IsInRole(RoleConstants.Client))
+            {
+                <li>
+                    <a asp-controller="Analytics" asp-action="Sprint" class="atm-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Analytics" ? "active" : "")">
+                        <i class="bi bi-graph-up"></i> Sprint Analytics
+                    </a>
+                </li>
+            }
+
+            <li>
+                <a asp-controller="AIAssistant" asp-action="Index" class="atm-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AIAssistant" ? "active" : "")">
+                    <i class="bi bi-robot"></i> AI Assistant
+                </a>
+            </li>
+
+            @* Dependencies — hidden from Clients *@
+            @if (!User.IsInRole(RoleConstants.Client))
+            {
+                <li>
+                    <a asp-controller="Dependency" asp-action="Graph" class="atm-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dependency" ? "active" : "")">
+                        <i class="bi bi-diagram-3"></i> Dependencies
+                    </a>
+                </li>
+            }
+            @* Time Tracking — hidden from Clients *@
+            @if (!User.IsInRole(RoleConstants.Client))
+            {
+                <li>
+                    <a asp-controller="TimeTracking" asp-action="Dashboard" class="atm-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "TimeTracking" ? "active" : "")">
+                        <i class="bi bi-clock-history"></i> Time Tracking
+                    </a>
+                </li>
+            }
+            <li>
+                <a asp-controller="Meeting" asp-action="Dashboard" class="atm-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Meeting" ? "active" : "")">
+                    <i class="bi bi-calendar-week"></i> Meetings
+                </a>
+            </li>
+
+            @if (User.IsInRole(RoleConstants.Admin))
+            {
+                <li class="atm-nav-section">ADMIN</li>
+                <li>
+                    <a asp-controller="User" asp-action="Index" class="atm-nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "User" ? "active" : "")">
+                        <i class="bi bi-people-fill"></i> Manage Users
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Task" asp-action="ExportExcel" class="atm-nav-link">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Export Excel
+                    </a>
+                </li>
+            }
+        </ul>
+
+        <div class="atm-sidebar-footer">
+            <div class="atm-user-avatar">
+                @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "?")
+            </div>
+            <div class="atm-user-info">
+                <div class="atm-user-name">@User.Identity?.Name</div>
+                <div class="atm-user-role">
+                    @if (User.IsInRole(RoleConstants.Admin)) { <span class="atm-role-tag admin">Admin</span> }
+                    else if (User.IsInRole(RoleConstants.Developer)) { <span class="atm-role-tag developer">Developer</span> }
+                    else { <span class="atm-role-tag client">Client</span> }
+                </div>
+            </div>
+            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="atm-logout-btn" title="Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <!-- Main content wrapper -->
+    <div class="atm-main" id="mainContent">
+        <!-- Top bar -->
+        <header class="atm-topbar">
+            <button class="atm-sidebar-toggle" id="sidebarToggle">
+                <i class="bi bi-list"></i>
+            </button>
+            <div class="atm-topbar-title-wrap">
+                <div class="atm-topbar-eyebrow">Agile Task Manager</div>
+                <div class="atm-topbar-title">@ViewData["Title"]</div>
+            </div>
+            <div class="atm-topbar-actions">
+                <span class="atm-signalr-status" id="signalrStatus">
+                    <span class="atm-status-dot"></span> Live
+                </span>
+            </div>
+        </header>
+
+        <!-- Alerts -->
+        <div class="atm-alert-stack">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show atm-alert" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show atm-alert" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+        </div>
+
+        <!-- Page body -->
+        <main class="atm-page-body" data-user-id="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value">
+            @RenderBody()
+        </main>
+    </div>
+}
+else
+{
+    <!-- Unauthenticated: render without sidebar -->
+    @RenderBody()
+}
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- SignalR client -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+<!-- Achievement Toast -->
+<link rel="stylesheet" href="~/css/achievement-toast.css" />
+<script src="~/js/achievement-toast.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<!-- Site JS -->
+<script src="~/js/site.js" asp-append-version="true"></script>
+
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

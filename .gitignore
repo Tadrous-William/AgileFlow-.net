@@ -1,0 +1,35 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.vs/
+.vs/
+*.DotSettings.user
+
+## Secrets
+appsettings.*.local.json
+appsettings.*.Development.json
+*.Development.json
+Properties/launchSettings.json
+
+## Node / client
+node_modules/
+wwwroot/lib/
+wwwroot/source/
+*.bundle.js
+
+## IDE
+.idea/
+*.swp
+*.swo
+*~
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Build
+packages/
+*.nupkg
+_build_out/

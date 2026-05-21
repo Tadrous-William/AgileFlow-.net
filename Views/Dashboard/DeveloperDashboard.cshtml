@@ -1,0 +1,380 @@
+@model AgileTaskManager.Models.ViewModels.DeveloperDashboardViewModel
+@using AgileTaskManager.Constants
+@{
+    ViewData["Title"] = "My Dashboard";
+    var totalT   = Model.TotalTasks > 0 ? Model.TotalTasks : 1;
+    var donePct  = Model.CompletedTasks * 100 / totalT;
+    var ipPct    = Model.InProgressTasks * 100 / totalT;
+    var ovPct    = Model.OverdueTasks.Count * 100 / totalT;
+}
+
+<style>
+.dash-hero{background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 55%,#3b82f6 100%);border-radius:18px;padding:2rem 2.5rem;margin-bottom:1.75rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;box-shadow:0 8px 32px rgba(99,102,241,.28);}
+.dash-hero h1{font-size:1.65rem;font-weight:800;color:#fff;margin:0;}
+.dash-hero p{color:rgba(255,255,255,.78);margin:.3rem 0 0;font-size:.9rem;}
+.dash-eyebrow{color:rgba(255,255,255,.62);font-size:.8rem;font-weight:500;letter-spacing:.05em;margin-bottom:.25rem;}
+.kpi-card{border-radius:16px;padding:1.35rem 1.5rem;display:flex;align-items:flex-start;gap:1rem;box-shadow:0 4px 18px rgba(0,0,0,.09);transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden;cursor:default;}
+.kpi-card:hover{transform:translateY(-3px);box-shadow:0 8px 26px rgba(0,0,0,.15);}
+.kpi-card::after{content:'';position:absolute;right:-18px;bottom:-18px;width:85px;height:85px;border-radius:50%;background:rgba(255,255,255,.1);}
+.kpi-card.violet{background:linear-gradient(135deg,#6366f1,#4f46e5);}
+.kpi-card.emerald{background:linear-gradient(135deg,#059669,#047857);}
+.kpi-card.amber{background:linear-gradient(135deg,#d97706,#b45309);}
+.kpi-card.rose{background:linear-gradient(135deg,#e11d48,#be123c);}
+.kpi-icon{width:50px;height:50px;border-radius:12px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fff;flex-shrink:0;}
+.kpi-value{font-size:1.9rem;font-weight:800;color:#fff;line-height:1;}
+.kpi-label{font-size:.73rem;color:rgba(255,255,255,.76);text-transform:uppercase;letter-spacing:.08em;margin-top:.22rem;}
+.panel{background:#fff;border:1px solid #e8edf5;border-radius:16px;box-shadow:0 2px 14px rgba(15,23,42,.06);overflow:hidden;}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.3rem;border-bottom:1px solid #f0f4fb;background:#fafbff;}
+.panel-title{font-size:.875rem;font-weight:700;color:#334155;display:flex;align-items:center;gap:.45rem;}
+.panel-title i{color:#6366f1;}
+.padded{padding:1.2rem 1.3rem;}
+.chart-wrap{padding:1.2rem 1.3rem;height:210px;}
+.stat-tile{background:#f8fafc;border-radius:12px;padding:1rem;text-align:center;border:1px solid #e8edf5;}
+.stat-tile-value{font-size:1.75rem;font-weight:800;line-height:1;}
+.stat-tile-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin-top:.25rem;}
+.mini-bar{background:#e2e8f0;border-radius:99px;height:5px;margin-top:6px;}
+.mini-fill{height:5px;border-radius:99px;}
+.fill-g{background:linear-gradient(90deg,#059669,#10b981);}
+.fill-o{background:linear-gradient(90deg,#d97706,#f59e0b);}
+.fill-r{background:linear-gradient(90deg,#dc2626,#ef4444);}
+.fill-v{background:linear-gradient(90deg,#4f46e5,#818cf8);}
+.dash-table{width:100%;border-collapse:collapse;}
+.dash-table thead tr{background:#f8fafc;}
+.dash-table thead th{padding:.6rem 1rem;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;border-bottom:1px solid #e8edf5;white-space:nowrap;}
+.dash-table tbody tr{border-bottom:1px solid #f1f5f9;transition:background .15s;}
+.dash-table tbody tr:last-child{border-bottom:none;}
+.dash-table tbody tr:hover{background:#f8faff;}
+.dash-table tbody td{padding:.65rem 1rem;font-size:.845rem;color:#334155;vertical-align:middle;}
+.badge-status{display:inline-flex;align-items:center;padding:.2rem .6rem;border-radius:99px;font-size:.7rem;font-weight:600;}
+.bs-done{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.25);}
+.bs-prog{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.25);}
+.bs-todo{background:rgba(99,102,241,.1);color:#4f46e5;border:1px solid rgba(99,102,241,.25);}
+.bs-over{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.25);}
+.bs-blk{background:rgba(100,116,139,.1);color:#64748b;border:1px solid rgba(100,116,139,.25);}
+.prio-critical{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.25);}
+.prio-high{background:rgba(234,88,12,.1);color:#ea580c;border:1px solid rgba(234,88,12,.25);}
+.prio-medium{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.25);}
+.prio-low{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.25);}
+.act-item{display:flex;gap:.85rem;padding:.72rem 1.3rem;border-bottom:1px solid #f1f5f9;}
+.act-item:last-child{border-bottom:none;}
+.act-item:hover{background:#f8faff;}
+.act-dot{width:9px;height:9px;border-radius:50%;background:#6366f1;flex-shrink:0;margin-top:5px;box-shadow:0 0 0 3px rgba(99,102,241,.15);}
+.act-action{font-size:.845rem;font-weight:600;color:#1e293b;}
+.act-meta{font-size:.74rem;color:#94a3b8;margin-top:.12rem;}
+.sprint-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1.1rem;}
+.sprint-name{font-weight:700;color:#1e293b;font-size:.9rem;margin-bottom:.5rem;}
+.sprint-prog{background:#e2e8f0;border-radius:99px;height:7px;}
+.sprint-fill{height:7px;border-radius:99px;background:linear-gradient(90deg,#6366f1,#8b5cf6);}
+.sprint-meta{display:flex;justify-content:space-between;font-size:.75rem;color:#94a3b8;margin-top:.4rem;}
+.analytics-banner{background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border-radius:16px;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;border:1px solid #334155;}
+.analytics-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.4rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-radius:10px;font-weight:700;font-size:.875rem;text-decoration:none;transition:opacity .2s;}
+.analytics-btn:hover{opacity:.85;color:#fff;}
+.dash-empty{padding:2rem;text-align:center;color:#cbd5e1;font-size:.875rem;}
+</style>
+
+<!-- Hero -->
+<div class="dash-hero">
+    <div>
+        <div class="dash-eyebrow"><i class="bi bi-person-badge me-1"></i>Developer Dashboard &nbsp;·&nbsp; @DateTime.Now.ToString("dddd, MMMM dd yyyy")</div>
+        <h1><i class="bi bi-lightning-charge-fill me-2" style="opacity:.85;"></i>@Model.UserName</h1>
+        <p>Your tasks, sprints, and performance — all in one place.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="atm-btn secondary" onclick="location.reload()" style="border-color:rgba(255,255,255,.4);color:#fff;background:rgba(255,255,255,.12);">
+            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+        </button>
+        <a asp-controller="Task" asp-action="Create" class="atm-btn primary" style="background:#fff;color:#6366f1;font-weight:700;">
+            <i class="bi bi-plus-lg me-1"></i>New Task
+        </a>
+    </div>
+</div>
+
+<!-- KPI Row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="kpi-card violet">
+            <div class="kpi-icon"><i class="bi bi-list-check"></i></div>
+            <div><div class="kpi-value">@Model.TotalTasks</div><div class="kpi-label">Total Tasks</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card emerald">
+            <div class="kpi-icon"><i class="bi bi-check2-circle"></i></div>
+            <div><div class="kpi-value">@Model.CompletedTasks</div><div class="kpi-label">Completed</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card amber">
+            <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
+            <div><div class="kpi-value">@Model.InProgressTasks</div><div class="kpi-label">In Progress</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card rose">
+            <div class="kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
+            <div><div class="kpi-value">@Model.OverdueTasks.Count</div><div class="kpi-label">Overdue</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Stats + Sprints -->
+<div class="row g-3 mb-4">
+    <div class="col-md-8">
+        <div class="panel h-100">
+            <div class="panel-header">
+                <span class="panel-title"><i class="bi bi-bar-chart-steps"></i>Task Breakdown</span>
+            </div>
+            <div class="padded">
+                <div class="row g-3 mb-4">
+                    <div class="col-3">
+                        <div class="stat-tile">
+                            <div class="stat-tile-value" style="color:#059669;">@Model.CompletedTasks</div>
+                            <div class="stat-tile-label">Done</div>
+                            <div class="mini-bar"><div class="mini-fill fill-g" style="width:@donePct%"></div></div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-tile">
+                            <div class="stat-tile-value" style="color:#d97706;">@Model.InProgressTasks</div>
+                            <div class="stat-tile-label">In Progress</div>
+                            <div class="mini-bar"><div class="mini-fill fill-o" style="width:@ipPct%"></div></div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-tile">
+                            <div class="stat-tile-value" style="color:#dc2626;">@Model.OverdueTasks.Count</div>
+                            <div class="stat-tile-label">Overdue</div>
+                            <div class="mini-bar"><div class="mini-fill fill-r" style="width:@ovPct%"></div></div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-tile">
+                            <div class="stat-tile-value" style="color:#6366f1;">@Model.BlockedTasks.Count</div>
+                            <div class="stat-tile-label">Blocked</div>
+                            <div class="mini-bar"><div class="mini-fill fill-v" style="width:@(Model.BlockedTasks.Count*100/totalT)%"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="stat-tile">
+                            <div style="font-size:.75rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;">This Week</div>
+                            <div style="font-size:1.4rem;font-weight:800;color:#6366f1;margin-top:.25rem;">@Model.TasksCompletedThisWeek <span style="font-size:.8rem;font-weight:500;color:#94a3b8;">tasks</span></div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-tile">
+                            <div style="font-size:.75rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;">This Month</div>
+                            <div style="font-size:1.4rem;font-weight:800;color:#6366f1;margin-top:.25rem;">@Model.TasksCompletedThisMonth <span style="font-size:.8rem;font-weight:500;color:#94a3b8;">tasks</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel h-100">
+            <div class="panel-header"><span class="panel-title"><i class="bi bi-pie-chart"></i>Status Chart</span></div>
+            <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- My Tasks Table -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title"><i class="bi bi-check2-square"></i>My Assigned Tasks</span>
+                <a asp-controller="Task" asp-action="Index" style="font-size:.8rem;color:#6366f1;text-decoration:none;font-weight:600;">View all <i class="bi bi-arrow-right"></i></a>
+            </div>
+            @if (!Model.AssignedTasks.Any())
+            {
+                <div class="dash-empty"><i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:.5rem;"></i>No tasks assigned yet.</div>
+            }
+            else
+            {
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th><i class="bi bi-card-text me-1"></i>Task</th>
+                            <th><i class="bi bi-flag me-1"></i>Priority</th>
+                            <th><i class="bi bi-circle me-1"></i>Status</th>
+                            <th><i class="bi bi-calendar me-1"></i>Deadline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Model.AssignedTasks.Take(8))
+                        {
+                            var prioClass = t.Priority.ToString().ToLower() switch {
+                                "critical" => "prio-critical", "high" => "prio-high",
+                                "medium"   => "prio-medium",   _       => "prio-low"
+                            };
+                            var stClass = t.Status.ToString().ToLower() switch {
+                                "done"       => "bs-done", "inprogress" => "bs-prog",
+                                "todo"       => "bs-todo", "blocked"    => "bs-blk",
+                                _            => "bs-over"
+                            };
+                            var isOver = t.Deadline.HasValue && t.Deadline < DateTime.UtcNow;
+                            <tr>
+                                <td><a asp-controller="Task" asp-action="Details" asp-route-id="@t.Id" style="color:#1e293b;font-weight:600;text-decoration:none;">@t.Title</a></td>
+                                <td><span class="badge-status @prioClass">@t.Priority</span></td>
+                                <td><span class="badge-status @stClass">@t.Status</span></td>
+                                <td>
+                                    @if (t.Deadline.HasValue)
+                                    { <span style="color:@(isOver?"#dc2626":"#64748b");font-size:.82rem;@(isOver?"font-weight:600;":"")">
+                                        @(isOver ? "⚠ " : "")@t.Deadline.Value.ToString("MMM dd, yyyy")
+                                      </span> }
+                                    else { <span style="color:#cbd5e1;">—</span> }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Active Sprints -->
+@if (Model.ActiveSprints.Any())
+{
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-header"><span class="panel-title"><i class="bi bi-lightning-charge"></i>Active Sprints</span></div>
+                <div class="padded">
+                    <div class="row g-3">
+                        @foreach (var sp in Model.ActiveSprints.Take(3))
+                        {
+                            var pct = sp.TotalTasks > 0 ? sp.CompletedTasks * 100 / sp.TotalTasks : 0;
+                            var daysLeft = Math.Max(0, (sp.EndDate - DateTime.UtcNow).Days);
+                            <div class="col-md-4">
+                                <div class="sprint-card">
+                                    <div class="sprint-name">⚡ @sp.SprintName</div>
+                                    <div class="sprint-prog"><div class="sprint-fill" style="width:@pct%"></div></div>
+                                    <div class="sprint-meta">
+                                        <span>@sp.CompletedTasks / @sp.TotalTasks tasks</span>
+                                        <span>@daysLeft days left</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Sprint Analytics Banner -->
+<div class="analytics-banner mb-4">
+    <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">📊</div>
+        <div>
+            <h5 style="color:#f1f5f9;margin:0 0 .2rem;font-weight:700;">Sprint Analytics</h5>
+            <p style="color:#94a3b8;margin:0;font-size:.855rem;">View completion rates, burndown charts, and team performance metrics.</p>
+        </div>
+    </div>
+    <a asp-controller="Analytics" asp-action="Sprint" class="analytics-btn">
+        <i class="bi bi-graph-up-arrow"></i> Open Analytics
+    </a>
+</div>
+
+<!-- Activity + Time + Meetings -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="panel h-100">
+            <div class="panel-header"><span class="panel-title"><i class="bi bi-clock-history"></i>Time Tracking</span></div>
+            <div class="padded">
+                <div class="row g-2 mb-3">
+                    <div class="col-4">
+                        <div class="stat-tile">
+                            <div style="font-size:1.1rem;font-weight:800;color:#6366f1;">@Model.TotalTimeToday.ToString(@"h\:mm")</div>
+                            <div class="stat-tile-label">Today</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-tile">
+                            <div style="font-size:1.1rem;font-weight:800;color:#6366f1;">@Model.TotalTimeThisWeek.ToString(@"h\:mm")</div>
+                            <div class="stat-tile-label">Week</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-tile">
+                            <div style="font-size:1.1rem;font-weight:800;color:#6366f1;">@Model.AverageDailyTime.ToString(@"h\:mm")</div>
+                            <div class="stat-tile-label">Avg/Day</div>
+                        </div>
+                    </div>
+                </div>
+                @foreach (var e in Model.RecentTimeEntries.Take(4))
+                {
+                    <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #f1f5f9;font-size:.82rem;">
+                        <span style="color:#334155;font-weight:500;">@e.TaskTitle</span>
+                        <span style="color:#6366f1;font-weight:700;">@e.Duration.ToString(@"h\:mm")</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel h-100">
+            <div class="panel-header"><span class="panel-title"><i class="bi bi-calendar-week"></i>Meetings</span></div>
+            <div class="padded">
+                @if (Model.UpcomingMeetings.Any())
+                {
+                    <div style="font-size:.75rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem;">Upcoming</div>
+                    @foreach (var m in Model.UpcomingMeetings.Take(3))
+                    {
+                        <div style="display:flex;gap:.75rem;padding:.55rem 0;border-bottom:1px solid #f1f5f9;">
+                            <div style="width:40px;height:40px;border-radius:10px;background:#f0f0ff;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#6366f1;flex-shrink:0;">@m.ScheduledAt.ToString("HH:mm")</div>
+                            <div><div style="font-size:.845rem;font-weight:600;color:#1e293b;">@m.Title</div><div style="font-size:.75rem;color:#94a3b8;">@m.Duration</div></div>
+                        </div>
+                    }
+                }
+                else { <div class="dash-empty">No upcoming meetings.</div> }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel h-100">
+            <div class="panel-header"><span class="panel-title"><i class="bi bi-activity"></i>Recent Activity</span></div>
+            <div style="max-height:280px;overflow-y:auto;">
+                @if (!Model.RecentActivity.Any())
+                { <div class="dash-empty">No activity yet.</div> }
+                else
+                {
+                    @foreach (var a in Model.RecentActivity.Take(8))
+                    {
+                        <div class="act-item">
+                            <div class="act-dot"></div>
+                            <div style="flex:1;">
+                                <div class="act-action">@a.Action</div>
+                                <div class="act-meta"><i class="bi bi-clock me-1"></i>@a.Timestamp.ToString("dd MMM, HH:mm")</div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-2" style="color:#cbd5e1;font-size:.76rem;">
+    <i class="bi bi-clock me-1"></i>Last updated: @Model.LastDataUpdate.ToString("yyyy-MM-dd HH:mm:ss UTC")
+</div>
+
+@section Scripts {
+<script>
+Chart.defaults.color = '#94a3b8';
+const sd = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TasksByStatus));
+const sc = { ToDo:'#6366f1', InProgress:'#f59e0b', Done:'#10b981', Blocked:'#64748b', Overdue:'#ef4444' };
+const sk = Object.keys(sd);
+new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: { labels: sk, datasets: [{ data: Object.values(sd), backgroundColor: sk.map(k => sc[k] ?? '#cbd5e1'), borderWidth: 2, borderColor: '#fff', hoverOffset: 8 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '62%',
+        plugins: { legend: { position: 'bottom', labels: { color: '#64748b', padding: 10, font: { size: 10 } } } } }
+});
+</script>
+}
