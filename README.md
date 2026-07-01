@@ -1,6 +1,6 @@
 # Agile Task Manager
 
-An enterprise-grade, multi-tenant agile project management system built with **ASP.NET Core 9 MVC** and **.NET 9**. Designed for software development teams, it covers the full agile workflow — from task and sprint management through to meetings, time tracking, analytics, gamification, and real-time collaboration.
+An enterprise-grade, multi-tenant agile project management system built with **ASP.NET Core 9 MVC** and **.NET 9**. Designed for software development teams, it covers the full agile workflow — from task and sprint management through to meetings, time tracking, analytics, gamification, and real-time collaboration
 
 ---
 
